@@ -1,0 +1,11 @@
+-r ../shared_models/requirements.txt
+
+fastapi
+uvicorn[standard]
+redis
+httpx
+python-dotenv
+loguru
+web3
+ton
+pytonlib

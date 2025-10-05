@@ -1,0 +1,59 @@
+# --------------------
+# Python
+# --------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyi
+*.pytest_cache/
+*.mypy_cache/
+*.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# --------------------
+# Environment
+# --------------------
+*.env
+*.env.*   # если используешь разные env для сервисов
+*.secret
+
+# --------------------
+# Docker
+# --------------------
+*.log
+docker-compose.override.yml
+*.pid
+*.sock
+*.swp
+docker-compose.override.yml
+**/Dockerfile.*.swp
+**/.dockerignore.swp
+
+# --------------------
+# IDE / Editor
+# --------------------
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.iml
+*.log
+
+# --------------------
+# MacOS / Linux / Windows
+# --------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --------------------
+# Shared models cache
+# --------------------
+shared_models/__pycache__/
+shared_models/*.pyc
