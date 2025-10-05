@@ -6,7 +6,7 @@ class MinesGameBase(BaseModel):
     bet: float
     num_mines: int
     won_amount: Optional[float] = None
-    result_data: Optional[str] = None  # JSON строка с состоянием игры
+    result_data: Optional[str] = None  
 
 class MinesGameCreate(MinesGameBase):
     user_id: int

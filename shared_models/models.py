@@ -16,6 +16,9 @@ class User(Base):
     name = Column(String, nullable=True)
     username = Column(String, unique=True, nullable=False)
     tg_id = Column(BigInteger, unique=True, nullable=False)
+    chat_id = Column(BigInteger, unique=True, nullable=False)
+    ref_code = Column(String, unique=True, nullable=False)
+    ref_by = Column(BigInteger, nullable=True, default=None)
     ton_balance = Column(Float, default=0.0)
     coins_balance = Column(Float, default=0.0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -23,7 +26,8 @@ class User(Base):
     wallets = relationship("Wallet", back_populates="user")
     games = relationship("MinesGame", back_populates="user")
     lottery_tickets = relationship("LotteryTicket", back_populates="user")
-    withdrawal_requests = relationship("WithdrawalRequest", back_populates="user")
+    transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
+
 
     # отношение many-to-many через таблицу Inventory
     inventory = relationship("Inventory", back_populates="user", cascade="all, delete-orphan")
@@ -51,7 +55,6 @@ class Inventory(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     gift_id = Column(Integer, ForeignKey("gifts.id", ondelete="CASCADE"))
-    quantity = Column(Integer, default=1)
     received_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="inventory")
@@ -70,8 +73,8 @@ class Gift(Base):
     cost_ton = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # отношение many-to-many через таблицу Inventory
     owners = relationship("Inventory", back_populates="gift", cascade="all, delete-orphan")
+    transactions = relationship("Transaction", back_populates="gift")
 
 
 # ------------------------------
@@ -121,15 +124,17 @@ class LotteryTicket(Base):
 # ------------------------------
 # Запросы на вывод
 # ------------------------------
-class WithdrawalRequest(Base):
-    __tablename__ = "withdrawal_requests"
+class Transaction(Base):
+    __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    gift_id = Column(Integer, ForeignKey("gifts.id"), nullable=True) 
-    amount = Column(Float, nullable=True)
+    type = Column(String, nullable=False)  # deposit, ton_withdrawal, gift_withdrawal
+    amount = Column(Float, nullable=True)  # TON сумма (если применимо)
+    gift_id = Column(Integer, ForeignKey("gifts.id"), nullable=True)  # если это подарок
     status = Column(String, default="pending")  # pending, completed, rejected
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
-    user = relationship("User", back_populates="withdrawal_requests")
+    user = relationship("User", back_populates="transactions")
+    gift = relationship("Gift", back_populates="transactions", lazy="joined")
