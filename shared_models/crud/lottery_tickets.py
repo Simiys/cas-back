@@ -12,6 +12,7 @@ async def create_lottery_ticket(db: AsyncSession, ticket_in: LotteryTicketCreate
     ticket = LotteryTicket(
         user_id=ticket_in.user_id,
         ticket_type=ticket_in.ticket_type,
+        currency = ticket_in.currency,
         price=ticket_in.price,
         won_gift_ids=ticket_in.won_gift_ids,
     )

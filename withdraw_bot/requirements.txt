@@ -1,0 +1,10 @@
+-r ../shared_models/requirements.txt
+
+
+telethon==1.30.0
+
+
+python-dotenv==1.0.1
+
+
+aiohttp==3.9.2

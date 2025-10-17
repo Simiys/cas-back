@@ -17,6 +17,7 @@ class UserCreate(BaseModel):
     tg_id: int
     name: Optional[str] = None
     chat_id: int
+    avatar_utl: str
     ref_code: str
     ref_by: Optional[str] = None
 
@@ -27,6 +28,7 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase):
     id: int
     created_at: datetime
+    avatar_utl: str
     ref_code: str
     ref_by: Optional[str] = None
     inventory: Optional[List[InventoryRead]] = [] 

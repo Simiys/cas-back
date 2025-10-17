@@ -1,10 +1,11 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
-from models import TicketTypeEnum
+from models import TicketTypeEnum, Currency
 
 class LotteryTicketBase(BaseModel):
     ticket_type: TicketTypeEnum
+    currency: Currency
     price: float
     won_gift_ids: Optional[List[int]] = []
 

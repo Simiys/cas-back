@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 from .base import Base
+from typing import AsyncGenerator
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -13,14 +14,14 @@ if not DATABASE_URL:
 
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,  
+    echo=False,       # Лучше выключить SQL-лог на проде
     future=True,
-    pool_size=10,     
+    pool_size=10,
     max_overflow=5
 )
 
 SessionLocal = sessionmaker(
-    engine,
+    bind=engine,
     expire_on_commit=False,
     class_=AsyncSession
 )
@@ -33,3 +34,11 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         print("✅ Таблицы созданы / проверены")
+        
+
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    async with SessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

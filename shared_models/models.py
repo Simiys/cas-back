@@ -17,6 +17,7 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     tg_id = Column(BigInteger, unique=True, nullable=False)
     chat_id = Column(BigInteger, unique=True, nullable=False)
+    avatar_url = Column(String, nullable=True)
     ref_code = Column(String, unique=True, nullable=False)
     ref_by = Column(BigInteger, nullable=True, default=None)
     ton_balance = Column(Float, default=0.0)
@@ -72,6 +73,7 @@ class Gift(Base):
     cost_coins = Column(Float, nullable=False)
     cost_ton = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    image_url  =Column(String, nullable=False)
 
     owners = relationship("Inventory", back_populates="gift", cascade="all, delete-orphan")
     transactions = relationship("Transaction", back_populates="gift")
@@ -105,12 +107,17 @@ class TicketTypeEnum(str, enum.Enum):
     gold = "gold"
 
 
+class Currency(str, enum.Enum):
+    hrpn = "hrpn"
+    ton = "ton"
+
 class LotteryTicket(Base):
     __tablename__ = "lottery_tickets"
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     ticket_type = Column(Enum(TicketTypeEnum), nullable=False)
+    currency = Column(Enum(Currency), nullable=False)
     price = Column(Float, nullable=False)
 
     # массив id подарков (может быть пустым)
@@ -129,7 +136,7 @@ class Transaction(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    type = Column(String, nullable=False)  # deposit, ton_withdrawal, gift_withdrawal
+    type = Column(String, nullable=False)  # deposit, ton_withdrawal, gift_withdrawal, gift_sale
     amount = Column(Float, nullable=True)  # TON сумма (если применимо)
     gift_id = Column(Integer, ForeignKey("gifts.id"), nullable=True)  # если это подарок
     status = Column(String, default="pending")  # pending, completed, rejected

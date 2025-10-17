@@ -9,3 +9,4 @@ loguru
 web3
 ton
 pytonlib
+jwt

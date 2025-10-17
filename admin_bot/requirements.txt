@@ -1,0 +1,5 @@
+-r ../shared_models/requirements.txt
+
+aiogram>=3.4
+python-dotenv
+loguru
