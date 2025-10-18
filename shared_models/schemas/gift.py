@@ -9,6 +9,7 @@ class GiftBase(BaseModel):
     telegram_gift_id: str
     cost_coins: float
     cost_ton: Optional[float] = None
+    image_url: str
 
 
 # Создание подарка (админом или системой)

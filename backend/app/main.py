@@ -5,6 +5,17 @@ import asyncio
 from backend.dependencies import get_redis
 from config import get_settings
 
+
+#импорт роутеров
+from backend.api.v1 import profile
+from backend.api.v1 import mines
+from backend.api.v1 import tickets
+from backend.api.v1 import balance
+from backend.api.v1 import auth
+from backend.api.v1 import inventory
+
+
+
 settings = get_settings()
 
 app = FastAPI(
@@ -47,12 +58,13 @@ async def shutdown_event():
         await redis.close()
         print("Redis disconnected")
 
-
-# -----------------------
-# Подключение роутеров из api
-# -----------------------
-# from backend.api import example_router
-# app.include_router(example_router.router, prefix="/example", tags=["example"])
+#подключение
+app.include_router(profile.router)
+app.include_router(mines.router)
+app.include_router(tickets.router)
+app.include_router(balance.router)
+app.include_router(auth.router)
+app.include_router(inventory.router)
 
 if __name__ == "__main__":
     import uvicorn
