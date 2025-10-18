@@ -12,6 +12,7 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
         tg_id=user_in.tg_id,
         username=user_in.username,
         name=user_in.name,
+        avatar_url=user_in.avatar_url,
         chat_id=user_in.chat_id,
         ref_code=user_in.ref_code,
         ref_by=user_in.ref_by
