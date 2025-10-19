@@ -7,7 +7,7 @@ from shared_models.db import get_session
 from services.balance_service import ExchangeRequest, ExchangeResponse, convert_currency_for_user
 
 router = APIRouter(
-    prefix="balance",
+    prefix="/balance",
     tags=["currency"]
 )
 
