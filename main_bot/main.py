@@ -61,9 +61,10 @@ async def cmd_start(message: types.Message):
 
         # Получаем реферальный код из ссылки, если есть
         ref_by = None
-        args = message.get_args()  # получает все после /start, например "REFCODE123"
-        if args:
-            ref_by = args.strip()  # сохраняем код
+        if message.text:
+            parts = message.text.split(maxsplit=1)
+            if len(parts) > 1:
+                ref_by = parts[1].strip()  # сохраняем код
 
         # Загружаем аватар (если есть)
         avatar_url = None
