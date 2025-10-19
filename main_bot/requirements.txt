@@ -1,4 +1,9 @@
--r ../shared_models/requirements.txt
+sqlalchemy>=2.0
+asyncpg
+pydantic>=2.0
+alembic
+python-dotenv
+
 
 aiogram>=3.4
 redis
