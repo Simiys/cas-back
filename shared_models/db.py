@@ -8,9 +8,13 @@ from typing import AsyncGenerator
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL не задан в shared_models/.env")
+DB_USER = os.getenv("POSTGRES_USER", "appdbuser")
+DB_PASS = os.getenv("POSTGRES_PASSWORD", "MfKG69UaJW4BI75N")
+DB_HOST = os.getenv("POSTGRES_HOST", "postgres")
+DB_PORT = os.getenv("POSTGRES_PORT", "5432")
+DB_NAME = os.getenv("POSTGRES_DB", "appdb")
+
+DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 engine = create_async_engine(
     DATABASE_URL,
