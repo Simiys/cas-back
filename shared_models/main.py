@@ -1,4 +1,5 @@
 import asyncio
+import shared_models.models
 from shared_models.db import init_db, create_engine_with_retry
 
 async def main():
