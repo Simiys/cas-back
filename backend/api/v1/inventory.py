@@ -123,7 +123,8 @@ async def sell_item(
         gift_id=gift.id,
         status="completed",
     )
-    await create_transaction(db, tx)
+    async with get_session() as db:
+        await create_transaction(db, tx)
 
     return {"message": f"Item sold for {gain} {currency}"}
 

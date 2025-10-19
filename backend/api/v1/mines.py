@@ -73,7 +73,8 @@ async def start_game(
     mines_service = MinesService(redis)
 
     try:
-        game = await mines_service.create_game(db, user_id, payload.bet, payload.mines)
+        async with get_session() as db:
+            game = await mines_service.create_game(db, user_id, payload.bet, payload.mines)
         return {"message": "Game started", "gameData": game}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -91,5 +92,6 @@ async def open_cell(
     user_id = await get_current_user_id(authorization)
 
     mines_service = MinesService(redis)
-    result = await mines_service.process_open_cell(db, user_id)
+    async with get_session() as db:
+        result = await mines_service.process_open_cell(db, user_id)
     return result
