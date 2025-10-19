@@ -84,14 +84,14 @@ async def cmd_start(message: types.Message):
             chat_id=chat_id,
             avatar_url=avatar_url,
             ref_code=generate_ref_code(),
-            ref_by=ref_by,  # здесь сохраняем реферальный код
+            ref_by=ref_by,
+            coins_balance=10000,
+            ton_balance=1000                
         )
+        
 
-        # Присваиваем стартовые значения (только в dev)
-        user_data.coins_balance = 10_000
-        user_data.ton_balance = 100
 
-        # Пытаемся создать пользователя
+        
         try:
             new_user = await create_user(db, user_data)
             await message.answer(
