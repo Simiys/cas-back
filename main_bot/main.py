@@ -10,7 +10,7 @@ import asyncio
 import uuid
 
 # Подключаем общие модели
-from shared_models.db import get_session, create_engine_with_retry
+from shared_models.db import get_session, create_engine_with_retry, init_db
 from shared_models.crud.user import create_user
 from shared_models.schemas.user import UserCreate
 
@@ -109,6 +109,7 @@ async def cmd_start(message: types.Message):
 async def main():
     print("Bot started...")
     await create_engine_with_retry()
+    await init_db()      
     await dp.start_polling(bot)
 
 

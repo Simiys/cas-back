@@ -1,14 +1,13 @@
 import asyncio
-from shared_models.db import init_db
+from shared_models.db import init_db, create_engine_with_retry
 
 async def main():
-    # Инициализация базы данных
-    await init_db()
-    print("✅ Shared_models готов и запущен")
+    await create_engine_with_retry()  # создаём движок и sessionmaker
+    await init_db()                   # создаём таблицы
+    print("✅ Shared_models готов и таблицы созданы")
     
-    # Держим контейнер живым, чтобы его можно было монтировать как volume
     while True:
-        await asyncio.sleep(3600)  # спим по часу, пока контейнер жив
+        await asyncio.sleep(3600)    # держим контейнер живым
 
 if __name__ == "__main__":
     asyncio.run(main())

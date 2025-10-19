@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from .base import Base
@@ -61,11 +62,8 @@ async def init_db():
         print("✅ Таблицы созданы / проверены")
 
 
+@asynccontextmanager
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """
-    Генератор для получения асинхронной сессии.
-    Используется с Depends в FastAPI или вручную через async with.
-    """
     if SessionLocal is None:
         await create_engine_with_retry()
     async with SessionLocal() as session:
