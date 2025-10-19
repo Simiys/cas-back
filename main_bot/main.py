@@ -52,7 +52,7 @@ def generate_ref_code():
 # ---------- Команда /start ----------
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
-   async for db in get_session():  # получаем сессию
+   async with get_session() as db:  # получаем сессию
         tg_user = message.from_user
         username = tg_user.username or f"user_{tg_user.id}"
         name = tg_user.full_name
