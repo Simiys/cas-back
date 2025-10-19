@@ -10,7 +10,7 @@ import asyncio
 import uuid
 
 # Подключаем общие модели
-from shared_models.db import SessionLocal, create_engine_with_retry
+from shared_models.db import get_session, create_engine_with_retry
 from shared_models.crud.user import create_user
 from shared_models.schemas.user import UserCreate
 
@@ -52,7 +52,7 @@ def generate_ref_code():
 # ---------- Команда /start ----------
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
-   async with SessionLocal() as db:  # получаем сессию
+   async with get_session() as db:  # получаем сессию
         tg_user = message.from_user
         username = tg_user.username or f"user_{tg_user.id}"
         name = tg_user.full_name
