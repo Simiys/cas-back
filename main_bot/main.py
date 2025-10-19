@@ -10,7 +10,7 @@ import asyncio
 import uuid
 
 # Подключаем общие модели
-from shared_models.db import get_session
+from shared_models.db import SessionLocal, create_engine_with_retry
 from shared_models.crud.user import create_user
 from shared_models.schemas.user import UserCreate
 
@@ -22,6 +22,8 @@ dp = Dispatcher()
 
 AVATAR_DIR = Path("/app/avatars")
 AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+
+
 
 # ---------- Хелпер для загрузки аватара ----------
 async def download_avatar(file_id: str, tg_id: int):
@@ -50,7 +52,7 @@ def generate_ref_code():
 # ---------- Команда /start ----------
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
-    async with get_session() as db:  # получаем сессию
+   async with SessionLocal() as db:  # получаем сессию
         tg_user = message.from_user
         username = tg_user.username or f"user_{tg_user.id}"
         name = tg_user.full_name
@@ -105,6 +107,7 @@ async def cmd_start(message: types.Message):
 # ---------- Точка входа ----------
 async def main():
     print("Bot started...")
+    await create_engine_with_retry()
     await dp.start_polling(bot)
 
 
