@@ -60,12 +60,12 @@ async def shutdown_event():
         print("Redis disconnected")
 
 #подключение
-app.include_router(profile.router)
-app.include_router(mines.router)
-app.include_router(tickets.router)
-app.include_router(balance.router)
-app.include_router(auth.router)
-app.include_router(inventory.router)
+app.include_router(profile.router, prefix="/api")
+app.include_router(mines.router, prefix="/api")
+app.include_router(tickets.router, prefix="/api")
+app.include_router(balance.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
+app.include_router(inventory.router, prefix="/api")
 
 if __name__ == "__main__":
     import uvicorn

@@ -8,7 +8,7 @@ from services.balance_service import ExchangeRequest, ExchangeResponse, convert_
 
 router = APIRouter(
     prefix="/balance",
-    tags=["currency"]
+    tags=["balance"]
 )
 
 auth_service = AuthService()
