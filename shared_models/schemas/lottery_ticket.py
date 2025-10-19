@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
-from models import TicketTypeEnum, Currency
+from shared_models.models import TicketTypeEnum, Currency
 
 class LotteryTicketBase(BaseModel):
     ticket_type: TicketTypeEnum

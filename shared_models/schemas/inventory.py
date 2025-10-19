@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from .gift import GiftRead
+from shared_models.schemas.gift import GiftRead
 
 
 class InventoryBase(BaseModel):
