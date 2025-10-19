@@ -37,7 +37,8 @@ async def login(
         raise HTTPException(status_code=400, detail="init_data missing")
 
     auth_service = AuthService()
-    token = await auth_service.login_via_telegram(db, init_data)
+    async with get_session() as db:
+        token = await auth_service.login_via_telegram(db, init_data)
 
     return TokenResponse(access_token=token)
 
