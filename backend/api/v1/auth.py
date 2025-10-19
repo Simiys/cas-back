@@ -68,7 +68,8 @@ async def get_me(
 
     # Получаем пользователя из БД по id
     from shared_models.crud.user import get_user_by_id
-    user = await get_user_by_id(db, user_id)
+    async with get_session() as db:
+        user = await get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 

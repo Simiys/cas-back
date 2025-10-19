@@ -56,7 +56,8 @@ async def get_inventory(
     db: AsyncSession = Depends(get_session),
 ):
     user_id = await get_current_user_id(authorization)
-    inventory = await get_inventory_by_user_id(db, user_id)
+    async with get_session() as db:
+        inventory = await get_inventory_by_user_id(db, user_id)
     return inventory
 
 
@@ -71,7 +72,8 @@ async def get_item(
 ):
     user_id = await get_current_user_id(authorization)
 
-    item = await get_inventory_item(db, id)
+    async with get_session() as db:
+        item = await get_inventory_item(db, id)
     if not item or item.user_id != user_id:
         raise HTTPException(status_code=404, detail="Item not found")
 
@@ -88,8 +90,8 @@ async def sell_item(
     db: AsyncSession = Depends(get_session),
 ):
     user_id = await get_current_user_id(authorization)
-
-    item = await get_inventory_item(db, id)
+    async with get_session() as db:
+        item = await get_inventory_item(db, id)
     if not item or item.user_id != user_id:
         raise HTTPException(status_code=404, detail="Item not found")
 
@@ -102,12 +104,16 @@ async def sell_item(
         currency = "TON"
     else:
         raise HTTPException(status_code=400, detail="This item has no sellable value")
+    
+    async with get_session() as db:
+        user = await get_user_by_id(db, user_id)
+        new_balance = user.coins_balance + gain
 
-    user = await get_user_by_id(db, user_id)
-    new_balance = user.coins_balance + gain
-    await update_user_balance(db, user_id, coins_balance=new_balance)
+    async with get_session() as db:
+        await update_user_balance(db, user_id, coins_balance=new_balance)
 
-    await remove_gift_from_user(db, user_id, gift.id)
+    async with get_session() as db:
+        await remove_gift_from_user(db, user_id, gift.id)
 
     # Создаём транзакцию
     tx = TransactionCreate(
@@ -133,7 +139,8 @@ async def withdraw_item(
 ):
     user_id = await get_current_user_id(authorization)
 
-    item = await get_inventory_item(db, id)
+    async with get_session() as db:
+        item = await get_inventory_item(db, id)
     if not item or item.user_id != user_id:
         raise HTTPException(status_code=404, detail="Item not found")
 
@@ -143,6 +150,7 @@ async def withdraw_item(
         gift_id=item.gift_id,
         status="pending",
     )
-    await create_transaction(db, tx)
+    async with get_session() as db:
+        await create_transaction(db, tx)
 
     return {"message": "Withdrawal request created"}

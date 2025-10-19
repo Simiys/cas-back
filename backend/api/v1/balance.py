@@ -41,7 +41,7 @@ async def convert(
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    # 💰 Конвертация валюты
+
     return await convert_currency_for_user(
         user_id=user_id,
         in_currency=payload.inCurrency,
