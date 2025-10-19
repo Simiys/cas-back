@@ -1,8 +1,8 @@
 from typing import Optional, List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models import Gift
-from ..schemas.gift import GiftCreate, GiftUpdate
+from shared_models.models import Gift
+from shared_models.schemas.gift import GiftCreate, GiftUpdate
 
 # ---------------------------
 # CREATE

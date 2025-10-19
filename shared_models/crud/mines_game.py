@@ -2,8 +2,8 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
-from models import MinesGame
-from schemas.mines_game import MinesGameCreate, MinesGameUpdate
+from shared_models.models import MinesGame
+from shared_models.schemas.mines_game import MinesGameCreate, MinesGameUpdate
 
 # ===========================
 # CREATE

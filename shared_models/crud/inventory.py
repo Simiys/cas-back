@@ -1,8 +1,8 @@
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models import Inventory
-from ..schemas.inventory import InventoryCreate
+from shared_models.models import Inventory
+from shared_models.schemas.inventory import InventoryCreate
 
 # ---------------------------
 # CREATE

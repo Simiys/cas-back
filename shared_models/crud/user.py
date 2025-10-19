@@ -1,8 +1,8 @@
 from typing import Optional, List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models import User
-from ..schemas.user import UserCreate
+from shared_models.models import User
+from shared_models.schemas.user import UserCreate
 
 # ---------------------------
 # CREATE

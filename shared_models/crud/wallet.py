@@ -1,8 +1,8 @@
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models import Wallet
-from ..schemas.wallet import WalletCreate
+from shared_models.models import Wallet
+from shared_models.schemas.wallet import WalletCreate
 
 # ---------------------------
 # CREATE

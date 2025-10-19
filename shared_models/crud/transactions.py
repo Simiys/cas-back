@@ -1,8 +1,8 @@
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models import Transaction
-from ..schemas.transactions import TransactionCreate, TransactionUpdate
+from shared_models.models import Transaction
+from shared_models.schemas.transactions import TransactionCreate, TransactionUpdate
 
 # ---------------------------
 # CREATE

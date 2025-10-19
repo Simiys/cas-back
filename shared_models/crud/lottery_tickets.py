@@ -2,8 +2,8 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
-from models import LotteryTicket
-from schemas.lottery_ticket import LotteryTicketCreate, LotteryTicketUpdate  # Пайдант схемы
+from shared_models.models import LotteryTicket
+from shared_models.schemas.lottery_ticket import LotteryTicketCreate, LotteryTicketUpdate  # Пайдант схемы
 
 # ===========================
 # CREATE
