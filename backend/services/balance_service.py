@@ -1,8 +1,19 @@
+from typing import Literal
 from fastapi import APIRouter, HTTPException, Header, Body, Depends
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from shared_models.crud.user import get_user_by_id, update_user_balance
-from api.v1.balance import ExchangeResponse
 
+class ExchangeRequest(BaseModel):
+    inCurrency: Literal["hrpn", "ton"]
+    amount: float
+
+class ExchangeResponse(BaseModel):
+    from_currency: str
+    to_currency: str
+    original_amount: float
+    converted_amount: float
+    rate: float
 
 async def convert_currency_for_user(
     user_id: int,

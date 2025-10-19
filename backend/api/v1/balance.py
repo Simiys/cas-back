@@ -4,7 +4,7 @@ from typing import Optional, Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 from services.auth_service import AuthService
 from shared_models.db import get_session
-from services.balance_service import convert_currency_for_user
+from services.balance_service import ExchangeRequest, ExchangeResponse, convert_currency_for_user
 
 router = APIRouter(
     prefix="balance",
@@ -16,16 +16,7 @@ auth_service = AuthService()
 # ------------------------
 # Схемы
 # ------------------------
-class ExchangeRequest(BaseModel):
-    inCurrency: Literal["hrpn", "ton"]
-    amount: float
 
-class ExchangeResponse(BaseModel):
-    from_currency: str
-    to_currency: str
-    original_amount: float
-    converted_amount: float
-    rate: float
 
 # ------------------------
 # /hrpn/exchange
