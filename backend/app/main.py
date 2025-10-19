@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 
 from backend.dependencies import get_redis
-from config import get_settings
+# from config import get_settings
 
 
 #импорт роутеров
@@ -16,7 +16,7 @@ from backend.api.v1 import inventory
 
 
 
-settings = get_settings()
+# settings = get_settings()
 
 app = FastAPI(
     title="Telegram Mini App Backend",
@@ -29,7 +29,7 @@ app = FastAPI(
 # -----------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS or ["*"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
