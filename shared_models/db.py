@@ -1,7 +1,6 @@
 import asyncio
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from .base import Base
 from typing import AsyncGenerator
 
@@ -13,10 +12,14 @@ DB_NAME = os.getenv("POSTGRES_DB")
 
 DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-engine = None
-SessionLocal = None
+engine: "AsyncEngine | None" = None
+SessionLocal: "async_sessionmaker[AsyncSession] | None" = None
+
 
 async def create_engine_with_retry(retries=10, delay=3):
+    """
+    Создаёт асинхронный движок и sessionmaker с повторными попытками подключения.
+    """
     global engine, SessionLocal
     for attempt in range(1, retries + 1):
         try:
@@ -24,14 +27,14 @@ async def create_engine_with_retry(retries=10, delay=3):
                 DATABASE_URL,
                 echo=False,
                 future=True,
-                pool_size=10,
-                max_overflow=5
             )
+
             # Тестовое подключение
             async with engine.begin() as conn:
                 await conn.run_sync(lambda conn: None)
-            
-            SessionLocal = sessionmaker(
+
+            # Асинхронный sessionmaker
+            SessionLocal = async_sessionmaker(
                 bind=engine,
                 expire_on_commit=False,
                 class_=AsyncSession
@@ -45,21 +48,25 @@ async def create_engine_with_retry(retries=10, delay=3):
             else:
                 raise e
 
+
 async def init_db():
     """
-    Инициализация базы данных с повторными попытками подключения.
+    Инициализация базы данных: создаёт таблицы.
     """
     if engine is None or SessionLocal is None:
         await create_engine_with_retry()
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         print("✅ Таблицы созданы / проверены")
 
+
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Генератор для получения асинхронной сессии.
+    Используется с Depends в FastAPI или вручную через async with.
+    """
     if SessionLocal is None:
         await create_engine_with_retry()
     async with SessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+        yield session
