@@ -1,3 +1,4 @@
+import os
 import jwt
 import json
 from datetime import datetime, timedelta
@@ -7,19 +8,20 @@ from config import settings
 from shared_models.crud.user import get_user_by_tg_id
 from dependencies import get_user_from_telegram_auth  # выносится отдельно
 
-
 class AuthService:
     def __init__(
         self,
-        secret_key: str = settings.SECRET_KEY,
+        secret_key: str | None = None,
         algorithm: str = "HS256",
-        token_expire_minutes: int = settings.TOKEN_EXPIRE_MINUTES
+        token_expire_minutes: int = 60*24*7  # 7 дней по умолчанию
     ):
-        self.secret_key = secret_key
+        # Берём ключ из параметра, если передан, иначе из переменных окружения
+        self.secret_key = secret_key or os.getenv("SECRET_KEY")
+        if not self.secret_key:
+            raise ValueError("SECRET_KEY is not set in environment variables!")
+
         self.algorithm = algorithm
         self.token_expire_minutes = token_expire_minutes
-
-
     # --- Проверка Telegram-токена ---
     async def verify_telegram_token(self, auth_token: str) -> dict:
         """
