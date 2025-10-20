@@ -14,12 +14,6 @@ TICKET_PRICES = {
     "gold": {"hrpn": 100000, "ton": 100}
 }
 
-TICKET_PRICES = {
-    "bronze": 1000,
-    "silver": 10000,
-    "gold": 100000,
-}
-
 TICKET_WIN_COUNTS = {
     "bronze": 1,
     "silver": 2,

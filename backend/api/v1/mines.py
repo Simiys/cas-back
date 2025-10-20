@@ -62,7 +62,7 @@ async def get_current_user_id(authorization: Optional[str]) -> int:
 # -----------------------
 # /mines/startGame
 # -----------------------
-@router.post("/startGame")
+@router.post("/start")
 async def start_game(
     payload: StartGameRequest = Body(...),
     authorization: Optional[str] = Header(None),
@@ -83,7 +83,7 @@ async def start_game(
 # -----------------------
 # /mines/openCell
 # -----------------------
-@router.post("/openCell", response_model=OpenCellResponse)
+@router.post("/open", response_model=OpenCellResponse)
 async def open_cell(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_session),
