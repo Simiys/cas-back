@@ -29,8 +29,8 @@ async def profile_me(
         user_id = auth_service.decode_access_token(token)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
-    async with get_session() as db:
-        user = await get_user_by_id(db, user_id)
+
+    user = await get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
