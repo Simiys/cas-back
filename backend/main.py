@@ -67,6 +67,11 @@ app.include_router(balance.router)
 app.include_router(auth.router)
 app.include_router(inventory.router)
 
+print("Registered routes:")
+for r in app.routes:
+    print(r.path)
+
+
 @app.get("/ping")
 async def ping():
     return {"pong": True}
