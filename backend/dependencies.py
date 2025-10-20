@@ -22,21 +22,20 @@ async def get_redis() -> aioredis.Redis:
     Возвращает асинхронное подключение к Redis.
     Создаёт клиент один раз и использует его повторно.
     """
-    global _redis_client
-    if _redis_client is None:
+    global redis_client  # <-- правильно
+    if redis_client is None:
         if not settings.REDIS_URL:
             raise RuntimeError("REDIS_URL не задан в настройках")
         try:
-            _redis_client = aioredis.from_url(
+            redis_client = aioredis.from_url(
                 settings.REDIS_URL,
                 decode_responses=True,
             )
             # Проверка соединения
-            await _redis_client.ping()
+            await redis_client.ping()
         except Exception as e:
             raise RuntimeError(f"Не удалось подключиться к Redis: {e}")
-    return _redis_client
-
+    return redis_client
 
 async def get_user_from_telegram_auth(auth_token: str = Header(...)) -> dict:
     """
