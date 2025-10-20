@@ -31,9 +31,10 @@ async def profile_me(
         raise HTTPException(status_code=401, detail="Invalid token")
     async with get_session() as db:
         user = await get_user_by_id(db, user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        return user
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return user
 
 @router.get("/getLadder", response_model=List[UserResponse])
 async def profile_get_ladder(

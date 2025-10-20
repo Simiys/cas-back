@@ -1,7 +1,9 @@
 from typing import Optional, List
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from shared_models.models import User
+from shared_models.models import Inventory
 from shared_models.schemas.user import UserCreate
 
 # ---------------------------
@@ -26,7 +28,17 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
 # READ
 # ---------------------------
 async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.inventory).selectinload(Inventory.gift),  # inventory + gift
+            selectinload(User.wallets),
+            selectinload(User.games),
+            selectinload(User.lottery_tickets),
+            selectinload(User.transactions),
+        )
+        .where(User.id == user_id)
+    )
     return result.scalar_one_or_none()
 
 async def get_user_by_tg_id(db: AsyncSession, tg_id: int) -> Optional[User]:
