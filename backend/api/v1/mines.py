@@ -73,8 +73,8 @@ async def start_game(
     mines_service = MinesService(redis)
 
     try:
-        async with get_session() as db:
-            game = await mines_service.create_game(db, user_id, payload.bet, payload.mines)
+
+        game = await mines_service.create_game(db, user_id, payload.bet, payload.mines)
         return {"message": "Game started", "gameData": game}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

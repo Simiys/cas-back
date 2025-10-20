@@ -34,8 +34,8 @@ async def buy_ticket_endpoint(
         raise e
 
     try:
-        async with get_session() as db:
-            gifts = await buy_ticket(db, user_id, ticket_type, currency)
+
+        gifts = await buy_ticket(db, user_id, ticket_type, currency)
         return gifts
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
