@@ -48,6 +48,11 @@ async def startup_event():
     if redis:
         print("Redis connected")
 
+    print("Registered routes:")
+    for r in app.routes:
+        print(r.path)
+    
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -67,9 +72,6 @@ app.include_router(balance.router)
 app.include_router(auth.router)
 app.include_router(inventory.router)
 
-print("Registered routes:")
-for r in app.routes:
-    print(r.path)
 
 
 @app.get("/ping")
