@@ -69,9 +69,10 @@ def get_gift_value_hrpn(gift: Gift) -> float:
     return 0.0
 
 
-def generate_wins(db: Session, user_id: int, ticket_type: str):
+async def generate_wins(db: AsyncSession, user_id: int, ticket_type: str):
     """Генерация выигрышей: шанс окупиться, но долгосрочный минус."""
-    gifts = db.query(Gift).all()
+    result = await get_all_gifts(db)
+    gifts = result.scalars().all()
     if not gifts:
         return []
 
@@ -81,16 +82,12 @@ def generate_wins(db: Session, user_id: int, ticket_type: str):
     # 🎯 Шаг 1. Определяем мультипликатор выигрыша
     r = random.random()
     if r < 0.10:
-        # 10% — ничего
         return []
     elif r < 0.30:
-        # 20% — окупаемость/плюс
         multiplier = random.uniform(1.0, 1.5)
     elif r < 0.80:
-        # 50% — средний возврат
         multiplier = random.uniform(0.6, 1.0)
     else:
-        # 20% — слабый выигрыш
         multiplier = random.uniform(0.2, 0.6)
 
     total_win_value = ticket_price * multiplier
@@ -109,14 +106,11 @@ def generate_wins(db: Session, user_id: int, ticket_type: str):
     # 🎯 Шаг 3. Подбор подарков под каждую часть
     wins = []
     for value in parts:
-        # вычисляем стоимость каждого подарка в HRPN
         suitable = [g for g in gifts if get_gift_value_hrpn(g) <= value]
-
         if suitable:
-            chosen = max(suitable, key=lambda g: get_gift_value_hrpn(g))
+            chosen = max(suitable, key=get_gift_value_hrpn)
         else:
-            chosen = min(gifts, key=lambda g: get_gift_value_hrpn(g))
-
+            chosen = min(gifts, key=get_gift_value_hrpn)
         wins.append(chosen)
 
     return wins

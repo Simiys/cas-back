@@ -51,7 +51,7 @@ async def convert_currency_for_user(
     return ExchangeResponse(
         from_currency=in_currency,
         to_currency="ton" if in_currency == "hrpn" else "hrpn",
+        original_amount=amount,
         converted_amount=converted_amount,
-        new_ton_balance=new_ton,
-        new_hrpn_balance=new_hrpn
+        rate=rate
     )

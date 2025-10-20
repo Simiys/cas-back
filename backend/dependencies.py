@@ -17,16 +17,25 @@ security = HTTPBearer()
 redis_client: Optional[aioredis.Redis] = None
 
 
-async def get_redis() -> Optional[aioredis.Redis]:
+async def get_redis() -> aioredis.Redis:
     """
-    Возвращает подключение к Redis, если REDIS_URL указан.
+    Возвращает асинхронное подключение к Redis.
+    Создаёт клиент один раз и использует его повторно.
     """
-    global redis_client
-    if settings.REDIS_URL:
-        if redis_client is None:
-            redis_client = await aioredis.from_url(settings.REDIS_URL, decode_responses=True)
-        return redis_client
-    return None
+    global _redis_client
+    if _redis_client is None:
+        if not settings.REDIS_URL:
+            raise RuntimeError("REDIS_URL не задан в настройках")
+        try:
+            _redis_client = aioredis.from_url(
+                settings.REDIS_URL,
+                decode_responses=True,
+            )
+            # Проверка соединения
+            await _redis_client.ping()
+        except Exception as e:
+            raise RuntimeError(f"Не удалось подключиться к Redis: {e}")
+    return _redis_client
 
 
 async def get_user_from_telegram_auth(auth_token: str = Header(...)) -> dict:
