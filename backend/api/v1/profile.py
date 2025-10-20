@@ -40,8 +40,8 @@ async def profile_me(
 async def profile_get_ladder(
     db: AsyncSession = Depends(get_session),
 ):
-    async with get_session() as db:
-        users = await get_top_users_by_coins(db, limit=100)
+
+    users = await get_top_users_by_coins(db, limit=100)
     return users
 
 @router.get("/getTasks")

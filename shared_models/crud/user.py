@@ -17,7 +17,9 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
         avatar_url=user_in.avatar_url,
         chat_id=user_in.chat_id,
         ref_code=user_in.ref_code,
-        ref_by=user_in.ref_by
+        ref_by=user_in.ref_by,
+        ton_balance=user_in.ton_balance,
+        coins_balance=user_in.coins_balance
     )
     db.add(db_user)
     await db.commit()

@@ -65,8 +65,15 @@ async def init_db():
 
 
 @asynccontextmanager
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_context_manager() -> AsyncGenerator[AsyncSession, None]:
     if SessionLocal is None:
         await create_engine_with_retry()
     async with SessionLocal() as session:
         yield session
+
+
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    if SessionLocal is None:
+        await create_engine_with_retry()
+    async with SessionLocal() as session:
+        yield session        

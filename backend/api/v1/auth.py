@@ -37,8 +37,8 @@ async def login(
         raise HTTPException(status_code=400, detail="init_data missing")
 
     auth_service = AuthService()
-    async with get_session() as db:
-        token = await auth_service.login_via_telegram(db, init_data)
+
+    token = await auth_service.login_via_telegram(db, init_data)
 
     return TokenResponse(access_token=token)
 
@@ -68,8 +68,8 @@ async def get_me(
 
     # Получаем пользователя из БД по id
     from shared_models.crud.user import get_user_by_id
-    async with get_session() as db:
-        user = await get_user_by_id(db, user_id)
+
+    user = await get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
