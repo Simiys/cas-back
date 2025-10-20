@@ -33,7 +33,7 @@ async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
     result = await db.execute(
         select(User)
         .options(
-            selectinload(User.inventory).selectinload(Inventory.gift),  # inventory + gift
+            selectinload(User.inventory).selectinload(Inventory.gift),
             selectinload(User.wallets),
             selectinload(User.games),
             selectinload(User.lottery_tickets),
@@ -43,21 +43,67 @@ async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
     )
     return result.scalar_one_or_none()
 
+
 async def get_user_by_tg_id(db: AsyncSession, tg_id: int) -> Optional[User]:
-    result = await db.execute(select(User).where(User.tg_id == tg_id))
+    result = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.inventory).selectinload(Inventory.gift),
+            selectinload(User.wallets),
+            selectinload(User.games),
+            selectinload(User.lottery_tickets),
+            selectinload(User.transactions),
+        )
+        .where(User.tg_id == tg_id)
+    )
     return result.scalar_one_or_none()
+
 
 async def get_user_by_username(db: AsyncSession, username: str) -> Optional[User]:
-    result = await db.execute(select(User).where(User.username == username))
+    result = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.inventory).selectinload(Inventory.gift),
+            selectinload(User.wallets),
+            selectinload(User.games),
+            selectinload(User.lottery_tickets),
+            selectinload(User.transactions),
+        )
+        .where(User.username == username)
+    )
     return result.scalar_one_or_none()
 
+
 async def get_users_by_ref_by(db: AsyncSession, ref_by_username: str) -> List[User]:
-    result = await db.execute(select(User).where(User.ref_by == ref_by_username))
+    result = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.inventory).selectinload(Inventory.gift),
+            selectinload(User.wallets),
+            selectinload(User.games),
+            selectinload(User.lottery_tickets),
+            selectinload(User.transactions),
+        )
+        .where(User.ref_by == ref_by_username)
+    )
     return result.scalars().all()
 
+
 async def get_top_users_by_coins(db: AsyncSession, limit: int = 100) -> List[User]:
-    result = await db.execute(select(User).order_by(User.coins_balance.desc()).limit(limit))
+    result = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.inventory).selectinload(Inventory.gift),
+            selectinload(User.wallets),
+            selectinload(User.games),
+            selectinload(User.lottery_tickets),
+            selectinload(User.transactions),
+        )
+        .order_by(User.coins_balance.desc())
+        .limit(limit)
+    )
     return result.scalars().all()
+
 
 # ---------------------------
 # UPDATE баланса
