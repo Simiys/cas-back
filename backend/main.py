@@ -67,6 +67,10 @@ app.include_router(balance.router)
 app.include_router(auth.router)
 app.include_router(inventory.router)
 
+@app.get("/ping")
+async def ping():
+    return {"pong": True}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
