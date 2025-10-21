@@ -92,6 +92,5 @@ async def open_cell(
     user_id = await get_current_user_id(authorization)
 
     mines_service = MinesService(redis)
-    async with get_session() as db:
-        result = await mines_service.process_open_cell(db, user_id)
+    result = await mines_service.process_open_cell(db, user_id)
     return result

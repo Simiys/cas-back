@@ -48,9 +48,6 @@ async def startup_event():
     if redis:
         print("Redis connected")
 
-    print("Registered routes:")
-    for r in app.routes:
-        print(r.path)
     
 
 
