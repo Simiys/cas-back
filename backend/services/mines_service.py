@@ -41,7 +41,7 @@ class MinesService:
 
         game_data = {
             "user_id": user_id,
-            "bet_hrpn": bet_hrpn,
+            "bet": bet_hrpn,
             "mines": mines,
             "opened_cells": 0,
             "total_win": 0.0,
