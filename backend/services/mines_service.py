@@ -72,7 +72,7 @@ class MinesService:
 
         if is_mine:
             await self.redis.delete(key)
-            return {"win": 0.0, "isEnd": True}
+            return {"win": round(win_per_cell, 2), "isEnd": is_end, "totalWin": round(total_win, 2)}
 
         bet = game["bet"]
         base_multiplier = game["base_multiplier"]
