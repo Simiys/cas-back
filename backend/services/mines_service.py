@@ -5,7 +5,7 @@ from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from shared_models.crud.user import get_user_by_id, update_user_balance
 
-RTP = 0.9  # целевой RTP ~90%
+RTP = 0.85  # целевой RTP ~90%
 HOUSE_EDGE = 1 - RTP
 N = 25  # всего клеток
 
@@ -31,20 +31,24 @@ class MinesService:
         if mines < 1 or mines >= N:
             raise ValueError("Количество мин должно быть от 1 до 24")
 
-        s = N - mines  # безопасных клеток
+        s = N - mines
         coeffs = []
-        M = 1.0
+
+        prob_survive = 1.0
         for i in range(s):
-            p_i = (s - i) / (N - i)
-            f_i = (1 - h) / p_i
-            M *= f_i
-            coeffs.append(round(M, 6))
+            p_i = float(s - i) / float(N - i)   # вероятность безопасной клетки на шаге i
+            prob_survive *= p_i                 # вероятность выжить до и включая этот шаг
+            F_k = 1.0 / prob_survive            # fair multiplier (>=1)
+            M_k = 1.0 + (F_k - 1.0) * (1.0 - h) # уменьшаем премию над 1 на factor (1-h)
+            coeffs.append(round(M_k, 6))
+
         return coeffs
+
 
     # -----------------------------
     # Создание игры
     # -----------------------------
-    async def create_game(self, db: AsyncSession, user_id: int, bet_ton: float, mines: int):
+    async def create_game(self, db: AsyncSession, user_id: int, bet: float, mines: int, currency: str):
         if mines < 1 or mines > 24:
             raise ValueError("Количество мин должно быть от 1 до 24")
 
@@ -52,17 +56,23 @@ class MinesService:
         if not user:
             raise ValueError("Пользователь не найден")
 
-        if user.ton_balance < bet_ton:
-            raise ValueError("Недостаточно TON для ставки")
+        if currency == "ton":
+            if user.ton_balance < bet:
+                raise ValueError("Недостаточно TON для ставки")
+            await update_user_balance(db, user_id, ton_balance=user.ton_balance - bet)
+        elif currency == "hrpn":
+            if user.coins_balance < bet:
+                raise ValueError("Недостаточно HRPN для ставки")
+            await update_user_balance(db, user_id, coins_balance=user.coins_balance - bet)
+        else:
+            raise ValueError("Неверная валюта")
 
-        await update_user_balance(db, user_id, ton_balance=user.ton_balance - bet_ton)
-
-        bet_hrpn = bet_ton * 1000
         coeffs = self.generate_coefficients(mines, h=HOUSE_EDGE)
 
         game_data = {
             "user_id": user_id,
-            "bet": bet_hrpn,
+            "bet": bet,
+            "currency": currency, 
             "mines": mines,
             "opened_cells": 0,
             "remaining_cells": N,
@@ -98,10 +108,10 @@ class MinesService:
 
         game = json.loads(data_raw)
         bet = game["bet"]
+        currency = game["currency"]
         opened = game["opened_cells"]
         coeffs = game["coeffs"]
 
-        # Если игрок не открыл ни одной клетки — выигрыша нет
         if opened == 0:
             await self.redis.delete(key)
             return {"coeff": 0.0, "totalWin": 0.0, "cellNumber": None, "isEnd": True}
@@ -111,8 +121,12 @@ class MinesService:
 
         user = await get_user_by_id(db, user_id)
         if user:
-            new_balance = user.coins_balance + total_win
-            await update_user_balance(db, user_id, coins_balance=new_balance)
+            if currency == "ton":
+                new_balance = user.ton_balance + total_win
+                await update_user_balance(db, user_id, ton_balance=new_balance)
+            elif currency == "hrpn":
+                new_balance = user.coins_balance + total_win
+                await update_user_balance(db, user_id, coins_balance=new_balance)
 
         await self.redis.delete(key)
         return {
@@ -159,7 +173,6 @@ class MinesService:
         is_end = game["opened_cells"] >= (N - game["mines"])
 
         if is_end:
-            # Если открыты все безопасные клетки — сразу cashout
             return await self.process_cashout(db, user_id)
 
         return {

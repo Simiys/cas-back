@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Header, Body
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.services.auth_service import AuthService
@@ -23,16 +23,24 @@ auth_service = AuthService()
 class StartGameRequest(BaseModel):
     mines: int
     bet: float
+    currency: Literal["ton", "hrpn"]  # ✅ новое поле
+
+
+class StartGameResponse(BaseModel):
+    message: str
+    gameData: dict
 
 
 class OpenCellResponse(BaseModel):
-    win: float
-    isEnd: bool
-    totalWin: Optional[float]
-
-
-class EndGameResponse(BaseModel):
+    coefficient: float
     totalWin: float
+    cellNumber: int
+    isEnd: bool
+
+
+class CashoutResponse(BaseModel):
+    totalWin: float
+    message: str
 
 
 # -----------------------
@@ -60,9 +68,9 @@ async def get_current_user_id(authorization: Optional[str]) -> int:
 
 
 # -----------------------
-# /mines/startGame
+# /mines/start
 # -----------------------
-@router.post("/start")
+@router.post("/start", response_model=StartGameResponse)
 async def start_game(
     payload: StartGameRequest = Body(...),
     authorization: Optional[str] = Header(None),
@@ -73,15 +81,20 @@ async def start_game(
     mines_service = MinesService(redis)
 
     try:
-
-        game = await mines_service.create_game(db, user_id, payload.bet, payload.mines)
+        game = await mines_service.create_game(
+            db=db,
+            user_id=user_id,
+            bet=payload.bet,
+            mines=payload.mines,
+            currency=payload.currency 
+        )
         return {"message": "Game started", "gameData": game}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 # -----------------------
-# /mines/openCell
+# /mines/open
 # -----------------------
 @router.post("/open", response_model=OpenCellResponse)
 async def open_cell(
@@ -90,7 +103,29 @@ async def open_cell(
     redis=Depends(get_redis),
 ):
     user_id = await get_current_user_id(authorization)
-
     mines_service = MinesService(redis)
-    result = await mines_service.process_open_cell(db, user_id)
-    return result
+
+    try:
+        result = await mines_service.process_open_cell(db, user_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# -----------------------
+# /mines/cashout
+# -----------------------
+@router.post("/cashout", response_model=CashoutResponse)
+async def cashout(
+    authorization: Optional[str] = Header(None),
+    db: AsyncSession = Depends(get_session),
+    redis=Depends(get_redis),
+):
+    user_id = await get_current_user_id(authorization)
+    mines_service = MinesService(redis)
+
+    try:
+        result = await mines_service.cashout(db, user_id)
+        return {"totalWin": result["totalWin"], "message": "Cashout successful"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
