@@ -34,7 +34,6 @@ class StartGameResponse(BaseModel):
 class OpenCellResponse(BaseModel):
     coeff: float
     totalWin: float
-    cellNumber: int
     isEnd: bool
 
 

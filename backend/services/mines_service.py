@@ -178,6 +178,5 @@ class MinesService:
         return {
             "coeff": current_coeff,
             "totalWin": total_win,
-            "cellNumber": game["opened_cells"],
             "isEnd": False
         }
