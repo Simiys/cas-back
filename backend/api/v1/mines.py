@@ -124,7 +124,7 @@ async def cashout(
     mines_service = MinesService(redis)
 
     try:
-        result = await mines_service.cashout(db, user_id)
+        result = await mines_service.process_cashout(db, user_id)
         return {"totalWin": result["totalWin"], "message": "Cashout successful"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
