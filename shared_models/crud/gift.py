@@ -29,8 +29,8 @@ async def get_gift_by_id(db: AsyncSession, gift_id: int) -> Optional[Gift]:
 # ---------------------------
 # READ все подарки
 # ---------------------------
-async def get_all_gifts(db: AsyncSession) -> List[Gift]:
-    result = await db.execute(select(Gift))
+async def get_avaliable_gifts(db: AsyncSession) -> List[Gift]:
+    result = await db.execute(select(Gift).where(Gift.owner_id == None))
     return result.scalars().all()
 
 # ---------------------------
