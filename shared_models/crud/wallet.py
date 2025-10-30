@@ -2,16 +2,16 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from shared_models.models import Wallet
-from shared_models.schemas.wallet import WalletCreate
+from shared_models.schemas.wallet import WalletCreate, WalletRead
+
 
 # ---------------------------
 # CREATE
 # ---------------------------
-async def create_wallet(db: AsyncSession, wallet_in: WalletCreate) -> Wallet:
+async def create_wallet(db: AsyncSession, user_id: int, wallet_address: str) -> Wallet:
     db_wallet = Wallet(
-        user_id=wallet_in.user_id,
-        wallet_address=wallet_in.wallet_address,
-        wallet_type=wallet_in.wallet_type
+        user_id=user_id,
+        wallet_address=wallet_address
     )
     db.add(db_wallet)
     await db.commit()
@@ -21,9 +21,9 @@ async def create_wallet(db: AsyncSession, wallet_in: WalletCreate) -> Wallet:
 # ---------------------------
 # READ все кошельки пользователя
 # ---------------------------
-async def get_wallets_by_user_id(db: AsyncSession, user_id: int) -> List[Wallet]:
+async def get_wallet_by_user_id(db: AsyncSession, user_id: int) -> Optional[Wallet]:
     result = await db.execute(select(Wallet).where(Wallet.user_id == user_id))
-    return result.scalars().all()
+    return result.scalar_one_or_none()
 
 # ---------------------------
 # READ по ID

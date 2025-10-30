@@ -10,7 +10,7 @@ from shared_models.schemas.gift import GiftCreate, GiftUpdate
 async def create_gift(db: AsyncSession, gift_in: GiftCreate) -> Gift:
     db_gift = Gift(
         name=gift_in.name,
-        telegram_gift_id=gift_in.telegram_gift_id,
+        address=gift_in.address,
         cost_coins=gift_in.cost_coins,
         cost_ton=gift_in.cost_ton
     )

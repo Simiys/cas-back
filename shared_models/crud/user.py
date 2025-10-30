@@ -3,7 +3,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from shared_models.models import User
-from shared_models.models import Inventory
 from shared_models.schemas.user import UserCreate
 
 # ---------------------------
@@ -33,7 +32,6 @@ async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
     result = await db.execute(
         select(User)
         .options(
-            selectinload(User.inventory).selectinload(Inventory.gift),
             selectinload(User.wallets),
             selectinload(User.games),
             selectinload(User.lottery_tickets),
@@ -48,7 +46,6 @@ async def get_user_by_tg_id(db: AsyncSession, tg_id: int) -> Optional[User]:
     result = await db.execute(
         select(User)
         .options(
-            selectinload(User.inventory).selectinload(Inventory.gift),
             selectinload(User.wallets),
             selectinload(User.games),
             selectinload(User.lottery_tickets),
@@ -63,7 +60,6 @@ async def get_user_by_username(db: AsyncSession, username: str) -> Optional[User
     result = await db.execute(
         select(User)
         .options(
-            selectinload(User.inventory).selectinload(Inventory.gift),
             selectinload(User.wallets),
             selectinload(User.games),
             selectinload(User.lottery_tickets),
@@ -78,7 +74,6 @@ async def get_users_by_ref_by(db: AsyncSession, ref_by_username: str) -> List[Us
     result = await db.execute(
         select(User)
         .options(
-            selectinload(User.inventory).selectinload(Inventory.gift),
             selectinload(User.wallets),
             selectinload(User.games),
             selectinload(User.lottery_tickets),
@@ -93,7 +88,6 @@ async def get_top_users_by_coins(db: AsyncSession, limit: int = 100) -> List[Use
     result = await db.execute(
         select(User)
         .options(
-            selectinload(User.inventory).selectinload(Inventory.gift),
             selectinload(User.wallets),
             selectinload(User.games),
             selectinload(User.lottery_tickets),

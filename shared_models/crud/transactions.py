@@ -25,6 +25,25 @@ async def get_transactions_by_user(db: AsyncSession, user_id: int) -> List[Trans
     )
     return result.scalars().all()
 
+async def get_ton_history(db: AsyncSession, user_id: int) -> List[Transaction]:
+    result = await db.execute(
+        select(Transaction)
+        .where(
+            Transaction.user_id == user_id,
+            Transaction.type.in_(["deposit", "ton_withdrawal"])
+        )
+        .order_by(Transaction.created_at.desc())
+    )
+    return result.scalars().all()
+
+async def get_pending_deposit_transactions(db: AsyncSession) -> List[Transaction]:
+    result = await db.execute(
+        select(Transaction)
+        .where(Transaction.status == "pending").where(Transaction.type == "deposit")
+        .order_by(Transaction.created_at.desc())
+    )
+    return result.scalars().all()
+
 # ---------------------------
 # READ по ID
 # ---------------------------

@@ -1,19 +1,19 @@
 import random
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from shared_models.models import Gift
 from shared_models.crud.gift import get_all_gifts
-from sqlalchemy.ext.asyncio import AsyncSession
 from shared_models.crud.user import get_user_by_id
 from shared_models.schemas.lottery_ticket import LotteryTicketCreate
 from shared_models.crud.lottery_tickets import create_lottery_ticket
 
-
+# Цены билетов
 TICKET_PRICES = {
     "bronze": {"hrpn": 1000, "ton": 1},
     "silver": {"hrpn": 10000, "ton": 10},
-    "gold": {"hrpn": 100000, "ton": 100}
+    "gold": {"hrpn": 100000, "ton": 100},
 }
 
+# Количество возможных выигрышей
 TICKET_WIN_COUNTS = {
     "bronze": 1,
     "silver": 2,
@@ -21,6 +21,16 @@ TICKET_WIN_COUNTS = {
 }
 
 TON_TO_HRPN = 1000  # курс TON → HRPN
+
+# 🎁 Пул призов в hrpn
+PRIZE_POOL_HRPN = [50, 100, 200, 300, 500, 1000, 2000, 5000]
+
+# Вероятности типов призов
+PRIZE_TYPE_WEIGHTS = {
+    "hrpn": 0.4,   # 45%
+    "ton": 0.4,    # 45%
+    "gift": 0.20    # 10%
+}
 
 async def buy_ticket(db: AsyncSession, user_id: int, ticket_type: str, currency: str):
     user = await get_user_by_id(db, user_id)
@@ -31,12 +41,11 @@ async def buy_ticket(db: AsyncSession, user_id: int, ticket_type: str, currency:
     # Проверка баланса
     # -------------------
     ticket_cost = TICKET_PRICES[ticket_type][currency]
-
     if currency == "hrpn":
         if user.coins_balance < ticket_cost:
             raise ValueError("Not enough coins")
         user.coins_balance -= ticket_cost
-    else:  # ton
+    else:
         if user.ton_balance < ticket_cost:
             raise ValueError("Not enough ton")
         user.ton_balance -= ticket_cost
@@ -44,57 +53,59 @@ async def buy_ticket(db: AsyncSession, user_id: int, ticket_type: str, currency:
     await db.commit()
     await db.refresh(user)
 
-    wins = await generate_wins(db, user_id=user_id, ticket_type=ticket_type)
+    # -------------------
+    # Генерация выигрышей
+    # -------------------
+    wins = await generate_wins(db, user_id, ticket_type)
+
+    # Преобразуем выигрыш в формат ["1_ton", "1000_hrpn", "120_gift", "0"]
+    won_items = []
+    for w in wins:
+        if w["type"] == "ton":
+            won_items.append(f"{w['value_ton']:.3f}_ton")
+        elif w["type"] == "hrpn":
+            won_items.append(f"{int(w['value_hrpn'])}_hrpn")
+        elif w["type"] == "gift":
+            won_items.append(f"{w['gift_id']}_gift")
+        else:
+            won_items.append("0")
+
+    # Дополняем массив до 4 элементов
+    while len(won_items) < 4:
+        won_items.append("0")
 
     ticket_in = LotteryTicketCreate(
         user_id=user_id,
         currency=currency,
         ticket_type=ticket_type,
         price=ticket_cost,
-        won_gift_ids=[g.id for g in wins] if wins else []
+        won_items=won_items
     )
+
     ticket = await create_lottery_ticket(db, ticket_in)
 
     return {
         "ticket": ticket,
-        "wins": wins
+        "wins": wins,
+        "won_items": won_items
     }
-
-def get_gift_value_hrpn(gift: Gift) -> float:
-    """Возвращает стоимость подарка в HRPN."""
-    if gift.cost_coins is not None:
-        return gift.cost_coins
-    if gift.cost_ton is not None:
-        return gift.cost_ton * TON_TO_HRPN
-    return 0.0
 
 
 async def generate_wins(db: AsyncSession, user_id: int, ticket_type: str):
-    """Генерация выигрышей: шанс окупиться, но долгосрочный минус."""
+    """Генерирует список выигрышей с учетом RTP и вероятностей типов призов."""
     result = await get_all_gifts(db)
-    gifts = result.scalars().all()
-    if not gifts:
-        return []
+    gifts = result.scalars().all() or []
 
-    ticket_price = TICKET_PRICES[ticket_type]
     max_prizes = TICKET_WIN_COUNTS[ticket_type]
+    ticket_price_hrpn = TICKET_PRICES[ticket_type]["hrpn"]
 
-    # 🎯 Шаг 1. Определяем мультипликатор выигрыша
-    r = random.random()
-    if r < 0.10:
-        return []
-    elif r < 0.30:
-        multiplier = random.uniform(1.0, 1.5)
-    elif r < 0.80:
-        multiplier = random.uniform(0.6, 1.0)
-    else:
-        multiplier = random.uniform(0.2, 0.6)
+    # 🎯 RTP — оставляем примерно тот же
+    # 80% от стоимости билета возвращается игроку
+    target_total_value = ticket_price_hrpn * random.uniform(0.5, 0.9)
 
-    total_win_value = ticket_price * multiplier
-
-    # 🎯 Шаг 2. Разбиваем выигрыш на части (если несколько призов)
+    # Делим общий выигрыш на несколько частей
     parts = []
-    remaining = total_win_value
+    remaining = target_total_value
     for i in range(max_prizes):
         if i == max_prizes - 1:
             parts.append(remaining)
@@ -103,14 +114,35 @@ async def generate_wins(db: AsyncSession, user_id: int, ticket_type: str):
             parts.append(part)
             remaining -= part
 
-    # 🎯 Шаг 3. Подбор подарков под каждую часть
+    # 🎯 Теперь определяем тип каждого приза
     wins = []
     for value in parts:
-        suitable = [g for g in gifts if get_gift_value_hrpn(g) <= value]
-        if suitable:
-            chosen = max(suitable, key=get_gift_value_hrpn)
-        else:
-            chosen = min(gifts, key=get_gift_value_hrpn)
-        wins.append(chosen)
+        prize_type = random.choices(
+            population=list(PRIZE_TYPE_WEIGHTS.keys()),
+            weights=list(PRIZE_TYPE_WEIGHTS.values()),
+            k=1
+        )[0]
+
+        if prize_type in ("hrpn", "ton"):
+            # Выбираем ближайшее значение из пула
+            hrpn_value = min(PRIZE_POOL_HRPN, key=lambda x: abs(x - value))
+            ton_value = hrpn_value / TON_TO_HRPN
+            wins.append({
+                "type": prize_type,
+                "value_hrpn": hrpn_value,
+                "value_ton": ton_value if prize_type == "ton" else None,
+                "gift_id": None
+            })
+        else:  # 🎁 подарок
+            if not gifts:
+                continue
+            suitable = [g for g in gifts if g.cost_ton * TON_TO_HRPN <= value]
+            chosen = random.choice(suitable or gifts)
+            wins.append({
+                "type": "gift",
+                "value_hrpn": chosen.cost_ton * TON_TO_HRPN,
+                "value_ton": chosen.cost_ton,
+                "gift_id": chosen.id
+            })
 
     return wins

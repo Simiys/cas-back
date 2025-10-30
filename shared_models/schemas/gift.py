@@ -6,10 +6,11 @@ from datetime import datetime
 # Базовая схема (общие поля)
 class GiftBase(BaseModel):
     name: str
-    telegram_gift_id: str
-    cost_coins: float
-    cost_ton: Optional[float] = None
+    address: str
+    cost_ton: float
     image_url: str
+    lottie_url: str
+    owner_id: Optional[int] = None
 
 
 # Создание подарка (админом или системой)
@@ -20,7 +21,6 @@ class GiftCreate(GiftBase):
 # Обновление подарка
 class GiftUpdate(BaseModel):
     name: Optional[str] = None
-    cost_coins: Optional[float] = None
     cost_ton: Optional[float] = None
 
 

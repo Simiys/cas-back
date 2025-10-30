@@ -30,9 +30,6 @@ class User(Base):
     transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
 
 
-    # отношение many-to-many через таблицу Inventory
-    inventory = relationship("Inventory", back_populates="user", cascade="all, delete-orphan")
-
 # ------------------------------
 # Кошельки
 # ------------------------------
@@ -42,7 +39,6 @@ class Wallet(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     wallet_address = Column(String, unique=True, nullable=False)
-    wallet_type = Column(String, nullable=False)  # ton, ethereum, etc
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="wallets")
@@ -50,16 +46,16 @@ class Wallet(Base):
 # ------------------------------
 # Инвентарь пользователя
 # ------------------------------
-class Inventory(Base):
-    __tablename__ = "inventory"
+# class Inventory(Base):
+#     __tablename__ = "inventory"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    gift_id = Column(Integer, ForeignKey("gifts.id", ondelete="CASCADE"))
-    received_at = Column(DateTime(timezone=True), server_default=func.now())
+#     id = Column(Integer, primary_key=True)
+#     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+#     gift_id = Column(Integer, ForeignKey("gifts.id", ondelete="CASCADE"))
+#     received_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user = relationship("User", back_populates="inventory")
-    gift = relationship("Gift", back_populates="owners")
+#     user = relationship("User", back_populates="inventory")
+#     gift = relationship("Gift", back_populates="owners")
 
 # ------------------------------
 # Доступные подарки
@@ -69,14 +65,17 @@ class Gift(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    telegram_gift_id = Column(String, nullable=False)
-    cost_coins = Column(Float, nullable=False)
+    address = Column(String, nullable=False)
     cost_ton = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    image_url  =Column(String, nullable=False)
+    image_url = Column(String, nullable=False)
+    lottie_url = Column(String, nullable=True)
 
-    owners = relationship("Inventory", back_populates="gift", cascade="all, delete-orphan")
-    transactions = relationship("Transaction", back_populates="gift")
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    owner = relationship("User", back_populates="gifts")
+    transactions = relationship("Transaction", back_populates="gift", cascade="all, delete-orphan")
+
 
 
 # ------------------------------
@@ -106,7 +105,6 @@ class TicketTypeEnum(str, enum.Enum):
     silver = "silver"
     gold = "gold"
 
-
 class Currency(str, enum.Enum):
     hrpn = "hrpn"
     ton = "ton"
@@ -120,8 +118,8 @@ class LotteryTicket(Base):
     currency = Column(Enum(Currency), nullable=False)
     price = Column(Float, nullable=False)
 
-    # массив id подарков (может быть пустым)
-    won_gift_ids = Column(ARRAY(Integer), nullable=True)
+    # выигрыш в формате ["1_ton", "1000_hrpn", "120_gift", "0"]
+    won_items = Column(ARRAY(String), nullable=False, default=["0", "0", "0", "0"])
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -136,8 +134,9 @@ class Transaction(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    type = Column(String, nullable=False)  # deposit, ton_withdrawal, gift_withdrawal, gift_sale
+    type = Column(String, nullable=False)  # deposit, ton_withdrawal, gift_withdrawal, gift_sale, ref, convert
     amount = Column(Float, nullable=True)  # TON сумма (если применимо)
+    tx_hash = Column(String, unique=True, nullable=True)
     gift_id = Column(Integer, ForeignKey("gifts.id"), nullable=True)  # если это подарок
     status = Column(String, default="pending")  # pending, completed, rejected
     created_at = Column(DateTime(timezone=True), server_default=func.now())

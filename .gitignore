@@ -16,6 +16,8 @@ ENV/
 dist/
 build/
 test.py
+test2.py
+t3.py
 # --------------------
 # Environment
 # --------------------

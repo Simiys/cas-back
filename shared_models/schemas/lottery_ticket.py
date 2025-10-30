@@ -1,20 +1,39 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import List, Optional
 from shared_models.models import TicketTypeEnum, Currency
 
+
+# ---------------------------
+# Базовая схема
+# ---------------------------
 class LotteryTicketBase(BaseModel):
     ticket_type: TicketTypeEnum
     currency: Currency
     price: float
-    won_gift_ids: Optional[List[int]] = []
+    won_items: List[str] = Field(
+        default_factory=lambda: ["0", "0", "0", "0"],
+        description="Массив из 4 элементов. Формат элементов: '<value>_<type>' (пример: '1_ton', '120_gift', '0')"
+    )
 
+
+# ---------------------------
+# Создание билета
+# ---------------------------
 class LotteryTicketCreate(LotteryTicketBase):
     user_id: int
 
-class LotteryTicketUpdate(BaseModel):
-    won_gift_ids: Optional[List[int]] = None
 
+# ---------------------------
+# Обновление (например, при выдаче выигрыша)
+# ---------------------------
+class LotteryTicketUpdate(BaseModel):
+    won_items: Optional[List[str]] = None
+
+
+# ---------------------------
+# Чтение (из БД наружу)
+# ---------------------------
 class LotteryTicketRead(LotteryTicketBase):
     id: int
     user_id: int

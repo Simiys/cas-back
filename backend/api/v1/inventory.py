@@ -1,17 +1,20 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Header, Query
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.services.async_services import process_gift_withdrawal
 from backend.services.auth_service import AuthService
+from shared_models.crud.wallet import get_wallet_by_user_id
 from shared_models.db import get_session
 from shared_models.crud.inventory import (
-    get_inventory_by_user_id,
-    get_inventory_item,
+    get_gifts_by_user_id,
+    get_gift_by_id,
     remove_gift_from_user,
 )
 from shared_models.crud.user import update_user_balance, get_user_by_id
 from shared_models.crud.transactions import create_transaction
-from shared_models.schemas.inventory import InventoryRead
+from shared_models.schemas.gift import GiftRead
 from shared_models.schemas.transactions import TransactionCreate
 
 
@@ -50,21 +53,21 @@ async def get_current_user_id(authorization: Optional[str]) -> int:
 # -----------------------
 # /inventory/ — все предметы пользователя
 # -----------------------
-@router.get("/", response_model=List[InventoryRead])
+@router.get("/", response_model=List[GiftRead])
 async def get_inventory(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_session),
 ):
     user_id = await get_current_user_id(authorization)
 
-    inventory = await get_inventory_by_user_id(db, user_id)
+    inventory = await get_gifts_by_user_id(db, user_id)
     return inventory
 
 
 # -----------------------
 # /inventory/getItem?id=
 # -----------------------
-@router.get("/getItem", response_model=InventoryRead)
+@router.get("/getItem", response_model=GiftRead)
 async def get_item(
     id: int = Query(...),
     authorization: Optional[str] = Header(None),
@@ -73,7 +76,7 @@ async def get_item(
     user_id = await get_current_user_id(authorization)
 
 
-    item = await get_inventory_item(db, id)
+    item = await get_gift_by_id(db, id)
     if not item or item.user_id != user_id:
         raise HTTPException(status_code=404, detail="Item not found")
 
@@ -91,16 +94,13 @@ async def sell_item(
 ):
     user_id = await get_current_user_id(authorization)
 
-    item = await get_inventory_item(db, id)
-    if not item or item.user_id != user_id:
+    gift = await get_gift_by_id(db, id)
+    if not gift or gift.owner_id != user_id:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    gift = item.gift
-    if gift.cost_coins is not None:
-        gain = gift.cost_coins
-        currency = "HRPN"
-    elif gift.cost_ton is not None:
-        gain = gift.cost_ton * 1000  # примерная конвертация
+
+    if gift.cost_ton is not None:
+        gain = gift.cost_ton * 1000  
         currency = "TON"
     else:
         raise HTTPException(status_code=400, detail="This item has no sellable value")
@@ -133,23 +133,34 @@ async def sell_item(
 @router.post("/withdrawItem")
 async def withdraw_item(
     id: int = Query(...),
-    authorization: Optional[str] = Header(None),
+    authorization: str = Header(...),
     db: AsyncSession = Depends(get_session),
 ):
     user_id = await get_current_user_id(authorization)
 
-
-    item = await get_inventory_item(db, id)
-    if not item or item.user_id != user_id:
+    # Проверяем, что подарок принадлежит пользователю
+    item = await get_gift_by_id(db, id)
+    if not item or item.owner_id != user_id:
         raise HTTPException(status_code=404, detail="Item not found")
 
+    # Получаем кошелёк пользователя
+    wallet = await get_wallet_by_user_id(db, user_id)
+    if not wallet or not wallet.wallet_address:
+        raise HTTPException(status_code=400, detail="Wallet not found")
+
+    wallet_address = wallet.wallet_address
+
+    # Создаём запись о транзакции
     tx = TransactionCreate(
         user_id=user_id,
         type="gift_withdrawal",
-        gift_id=item.gift_id,
+        gift_id=item.id,
         status="pending",
     )
-    async with get_session() as db:
-        await create_transaction(db, tx)
+    transaction = await create_transaction(db, tx)
 
-    return {"message": "Withdrawal request created"}
+    # Фоновая отправка NFT
+    asyncio.create_task(process_gift_withdrawal(transaction.id, wallet_address, item.nft_address, db))
+
+    return {"message": "Withdrawal request created and processing started"}
+

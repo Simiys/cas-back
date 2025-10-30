@@ -1,10 +1,17 @@
+import asyncio
 from fastapi import APIRouter, HTTPException, Header, Body, Depends
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
+from backend.api.v1.inventory import get_current_user_id
+from backend.services.async_services import process_ton_withdraw
 from services.auth_service import AuthService
+from shared_models.crud.transactions import create_transaction, get_ton_history
+from shared_models.crud.user import get_user_by_id
+from shared_models.crud.wallet import create_wallet, get_wallet_by_user_id
 from shared_models.db import get_session
 from services.balance_service import ExchangeRequest, ExchangeResponse, convert_currency_for_user
+from shared_models.schemas.transactions import TransactionCreate, TransactionRead
 
 router = APIRouter(
     prefix="/balance",
@@ -13,6 +20,15 @@ router = APIRouter(
 
 auth_service = AuthService()
 
+class TonWithdrawRequest(BaseModel):
+    amount: float 
+
+class WalletConnectRequest(BaseModel):
+    wallet_address: str
+
+class TonDepositRequest(BaseModel):
+    amount: float 
+    tx_hash: str 
 
 # ------------------------
 # /balance/convert
@@ -53,22 +69,104 @@ async def convert(
 # ------------------------
 # Методы /ton (заглушки)
 # ------------------------
-@router.get("/ton/history")
-async def ton_history():
-    return []
+@router.get("/ton/history", response_model=List[TransactionRead])
+async def ton_history(
+    db: AsyncSession = Depends(get_session),
+    authorization: Optional[str] = Header(None),
+):
+    user_id = await get_current_user_id(authorization)
+    """
+    Возвращает историю TON транзакций (депозиты и выводы) пользователя.
+    """
+    transactions = await get_ton_history(db, user_id)
+    return transactions
+
+
 
 @router.post("/ton/withdraw")
-async def ton_withdraw():
-    return []
+async def ton_withdraw(
+    payload: TonWithdrawRequest = Body(...),
+    authorization: Optional[str] = Header(None),
+    db: AsyncSession = Depends(get_session),
+):
+    # Получаем user_id
+    user_id = await get_current_user_id(authorization)
+
+    # Получаем пользователя
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Проверяем баланс
+    if user.ton_balance < payload.amount:
+        raise HTTPException(status_code=400, detail="Not enough TON balance")
+
+    # Снимаем TON сразу (чтобы избежать гонок)
+    user.ton_balance -= payload.amount
+    await db.commit()
+    await db.refresh(user)
+
+    # Получаем кошелек пользователя
+    wallet = await get_wallet_by_user_id(db, user_id)
+    if not wallet:
+        raise HTTPException(status_code=400, detail="Wallet not found")
+
+    # Создаем транзакцию
+    tx = TransactionCreate(
+        user_id=user_id,
+        type="ton_withdrawal",
+        amount=payload.amount,
+        status="pending",
+    )
+    transaction = await create_transaction(db, tx)
+
+    # Запускаем фоновую задачу на отправку TON
+    asyncio.create_task(
+        process_ton_withdraw(db, transaction.id, payload.amount, wallet.wallet_address)
+    )
+
+    return {"message": "TON withdrawal started", "transaction_id": transaction.id}
+
 
 @router.post("/ton/deposit")
-async def ton_deposit():
-    return []
+async def ton_deposit(
+    payload: TonDepositRequest,
+    authorization: Optional[str] = Header(None),
+    db: AsyncSession = Depends(get_session),
+):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+
+    user_id = get_current_user_id(authorization)
+
+    # Создаем транзакцию в статусе pending
+    tx_in = TransactionCreate(
+        user_id=user_id,
+        type="deposit",
+        amount=payload.amount,
+        tx_hash=payload.tx_hash,
+        status="pending"
+    )
+    tx = await create_transaction(db, tx_in)
+
+    return {
+        "message": "Deposit request created. It will be confirmed after verification.",
+        "transaction_id": tx.id
+    }
+
 
 @router.post("/ton/wallet/connect")
-async def ton_wallet_connect():
-    return []
+async def ton_wallet_connect(
+    payload: WalletConnectRequest,
+    authorization: Optional[str] = Header(None),
+    db: AsyncSession = Depends(get_session),
+):
+    user_id = get_current_user_id(authorization)
 
-@router.post("/ton/wallet/disconnect")
-async def ton_wallet_disconnect():
-    return []
+    existing_wallet = await get_wallet_by_user_id(db, user_id)
+    if existing_wallet:
+        return {"message": "Wallet already exists" }
+
+    # Создаем новый кошелек
+    wallet = await create_wallet(db, user_id=user_id, wallet_address=payload.wallet_address)
+    return {"message": "Wallet connected", "wallet_address": wallet.wallet_address}
