@@ -100,15 +100,15 @@ async def sell_item(
 
 
     if gift.cost_ton is not None:
-        gain = gift.cost_ton * 1000  
+        gain = gift.cost_ton   
         currency = "TON"
     else:
         raise HTTPException(status_code=400, detail="This item has no sellable value")
     
     user = await get_user_by_id(db, user_id)
-    new_balance = user.coins_balance + gain
+    new_balance = user.ton_balance + gain
 
-    await update_user_balance(db, user_id, coins_balance=new_balance)
+    await update_user_balance(db, user_id, ton_balance=new_balance)
 
 
     await remove_gift_from_user(db, user_id, gift.id)
@@ -160,7 +160,7 @@ async def withdraw_item(
     transaction = await create_transaction(db, tx)
 
     # Фоновая отправка NFT
-    asyncio.create_task(process_gift_withdrawal(transaction.id, wallet_address, item.nft_address, db))
+    asyncio.create_task(process_gift_withdrawal(transaction.id, wallet_address, item.address, db))
 
     return {"message": "Withdrawal request created and processing started"}
 

@@ -1,13 +1,17 @@
 # file: wallet_service.py
+from datetime import datetime, timedelta
 import os
 from typing import Dict, Optional
 import aiohttp
+from dotenv import load_dotenv
 import requests
 from tonutils.client import ToncenterV3Client
 from tonutils.wallet import WalletV4R2
 from tonutils.wallet.messages import TransferNFTMessage
 
-# Настройки
+
+load_dotenv()
+
 IS_TESTNET = os.getenv("IS_TESTNET", "True") == "True"
 MNEMONIC = os.getenv("TON_MNEMONIC", "")
 APP_WALLET_ADDRESS = os.getenv("APP_WALLET_ADDRESS", "")
@@ -170,3 +174,72 @@ async def get_transaction_info(tx_hash: str) -> Optional[Dict]:
         "out_msgs": out_msgs,
         "description": tx.get("description")
     }
+
+
+def get_last_transactions(limit: int = 10):
+    """
+    Получение последних транзакций кошелька за последние 20 минут через TonCenter v3 API.
+    Возвращает список словарей:
+    {
+        'sender': str,
+        'receiver': str,
+        'hash': str,
+        'amount': int,  # в нанограммах
+        'time': datetime,
+        'confirmed': bool
+    }
+    """
+    twenty_minutes_ago = int((datetime.utcnow() - timedelta(minutes=20)).timestamp())
+
+    url = f"https://toncenter.com/api/v3/transactions"
+    params = {
+        "account": APP_WALLET_ADDRESS,
+        "limit": limit,
+        "offset": 0,
+        "sort": "desc",
+        "start_lt": twenty_minutes_ago,  # запрашиваем транзакции с lt > этого значения
+    }
+
+    headers = {
+        "accept": "application/json",
+        "X-API-Key": TONCENTER_API_KEY
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+
+    transactions = []
+
+    for tx in data.get("transactions", []):
+        in_msg = tx.get("in_msg", {})
+        if not in_msg:
+            continue
+
+        sender = in_msg.get("source")
+        receiver = in_msg.get("destination")
+        hash_ = tx.get("hash")
+        amount = int(in_msg.get("value", 0))
+        time = datetime.fromtimestamp(tx.get("now", 0))
+        confirmed = tx.get("end_status") == "active"
+
+        transactions.append({
+            "sender": sender,
+            "receiver": receiver,
+            "hash": hash_,
+            "amount": amount,
+            "time": time,
+            "confirmed": confirmed
+        })
+
+    return transactions
+
+def check_transaction(transactions, sender_address: str, amount: int):
+    """
+    Проверяет, есть ли среди транзакций транзакция с указанным
+    отправителем и суммой (в нанограммах).
+    """
+    for tx in transactions:
+        if tx["sender"] == sender_address and tx["amount"] == amount:
+            return True
+    return False

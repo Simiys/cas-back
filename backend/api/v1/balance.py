@@ -1,4 +1,5 @@
 import asyncio
+from datetime import time
 from fastapi import APIRouter, HTTPException, Header, Body, Depends
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -12,6 +13,12 @@ from shared_models.crud.wallet import create_wallet, get_wallet_by_user_id
 from shared_models.db import get_session
 from services.balance_service import ExchangeRequest, ExchangeResponse, convert_currency_for_user
 from shared_models.schemas.transactions import TransactionCreate, TransactionRead
+from os import getenv
+
+
+
+APP_WALLET = getenv("APP_WALLET")
+
 
 router = APIRouter(
     prefix="/balance",
@@ -134,25 +141,38 @@ async def ton_deposit(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_session),
 ):
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Authorization header missing")
-
-    user_id = get_current_user_id(authorization)
-
-    # Создаем транзакцию в статусе pending
-    tx_in = TransactionCreate(
-        user_id=user_id,
-        type="deposit",
-        amount=payload.amount,
-        tx_hash=payload.tx_hash,
-        status="pending"
+    user_id = await get_current_user_id(authorization)
+    wallet = await get_wallet_by_user_id(db, user_id)
+    # Создаём транзакцию в статусе pending
+    tx = await create_transaction(
+        db,
+        TransactionCreate(
+            user_id=user_id,
+            type="deposit",
+            tx_hash=wallet.wallet_address,
+            amount=payload.amount,
+            status="pending"
+        ),
     )
-    tx = await create_transaction(db, tx_in)
 
-    return {
-        "message": "Deposit request created. It will be confirmed after verification.",
+    ton_tx = {
+    "validUntil": int(time.time()) + 600,  # 10 минут
+    "messages": [
+        {
+            "address": APP_WALLET,
+            "amount": str(int(payload.amount * 1e9)), # TON -> nanoton
+        }
+    ],
+    "metadata": {
         "transaction_id": tx.id
     }
+}
+
+    return {
+        "transaction_id": tx.id,
+        "ton_tx": ton_tx
+    }
+
 
 
 @router.post("/ton/wallet/connect")
