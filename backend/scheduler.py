@@ -1,14 +1,27 @@
+# backend/scheduler.py
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
-from shared_models.db import get_context_manager   # <-- твой файл где код сверху
-from services.async_services import process_pending_deposits
+from backend.services.async_services import process_pending_deposits
+from shared_models.db import get_context_manager
+import asyncio
 
 scheduler = AsyncIOScheduler()
 
-async def deposit_check_job():
-    async with get_context_manager() as session:   # <-- вместо async_sessionmaker
-        await process_pending_deposits(session)
-
 def start_scheduler():
-    scheduler.add_job(deposit_check_job, IntervalTrigger(minutes=60))
+    from datetime import timedelta
+    from apscheduler.triggers.interval import IntervalTrigger
+
+    async def job_wrapper():
+        async with get_context_manager() as db:
+            await process_pending_deposits(db)
+
+    # Обёртка для async job
+    def job():
+        asyncio.create_task(job_wrapper())
+
+    scheduler.add_job(
+        job,
+        trigger=IntervalTrigger(hours=1),
+        id="process_pending_deposits",
+        replace_existing=True
+    )
     scheduler.start()
