@@ -161,10 +161,8 @@ async def ton_deposit(
             "address": settings.APP_WALLET_ADDRESS,
             "amount": str(int(payload.amount * 1e9)), # TON -> nanoton
         }
-    ],
-    "metadata": {
-        "transaction_id": tx.id
-    }
+    ]
+    
 }
 
     return {
