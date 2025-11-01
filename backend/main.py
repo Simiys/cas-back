@@ -14,6 +14,7 @@ from backend.api.v1 import tickets
 from backend.api.v1 import balance
 from backend.api.v1 import auth
 from backend.api.v1 import inventory
+from backend.scheduler import start_scheduler
 
 
 
@@ -41,12 +42,13 @@ app.add_middleware(
 # -----------------------
 @app.on_event("startup")
 async def startup_event():
-    """
-    Здесь можно инициализировать Redis и другие сервисы
-    """
     redis = await get_redis()
     if redis:
         print("Redis connected")
+
+    # запускаем APScheduler
+    start_scheduler()
+    print("✅ Scheduler started")
 
     
 
