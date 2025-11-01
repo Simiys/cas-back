@@ -181,7 +181,7 @@ async def ton_wallet_connect(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_session),
 ):
-    user_id = get_current_user_id(authorization)
+    user_id = await get_current_user_id(authorization)
 
     existing_wallet = await get_wallet_by_user_id(db, user_id)
     if existing_wallet:
