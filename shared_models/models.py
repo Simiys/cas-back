@@ -28,7 +28,7 @@ class User(Base):
     games = relationship("MinesGame", back_populates="user")
     lottery_tickets = relationship("LotteryTicket", back_populates="user")
     transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
-    gifts = relationship("Gift", back_populates="user")
+    gifts = relationship("Gift", back_populates="owner")
 
 
 # ------------------------------
@@ -76,6 +76,7 @@ class Gift(Base):
 
     owner = relationship("User", back_populates="gifts")
     transactions = relationship("Transaction", back_populates="gift", cascade="all, delete-orphan")
+
 
 
 
