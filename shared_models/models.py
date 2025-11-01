@@ -138,7 +138,7 @@ class Transaction(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     type = Column(String, nullable=False)  # deposit, ton_withdrawal, gift_withdrawal, gift_sale, ref, convert
     amount = Column(Float, nullable=True)  # TON сумма (если применимо)
-    tx_hash = Column(String, unique=True, nullable=True)
+    tx_hash = Column(String, nullable=True)
     gift_id = Column(Integer, ForeignKey("gifts.id"), nullable=True)  # если это подарок
     status = Column(String, default="pending")  # pending, completed, rejected
     created_at = Column(DateTime(timezone=True), server_default=func.now())
