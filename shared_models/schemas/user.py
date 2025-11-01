@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional, List
-from shared_models.schemas.inventory import InventoryRead  # <-- импортируем вложенную схему
+
 
 class UserBase(BaseModel):
     name: Optional[str] = None
@@ -33,7 +33,6 @@ class UserResponse(UserBase):
     avatar_url: str
     ref_code: str
     ref_by: Optional[str] = None
-    inventory: Optional[List[InventoryRead]] = [] 
 
     class Config:
         orm_mode = True
