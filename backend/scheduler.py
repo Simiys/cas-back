@@ -34,7 +34,6 @@ def start_scheduler():
         id="process_pending_deposits",
         replace_existing=True
     )
-    scheduler.start()
 
 
     async def fetch_and_store_gifts_job():
