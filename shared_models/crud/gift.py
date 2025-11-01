@@ -11,8 +11,10 @@ async def create_gift(db: AsyncSession, gift_in: GiftCreate) -> Gift:
     db_gift = Gift(
         name=gift_in.name,
         address=gift_in.address,
-        cost_coins=gift_in.cost_coins,
-        cost_ton=gift_in.cost_ton
+        cost_ton=gift_in.cost_ton, 
+        immage_url=gift_in.image_url,
+        lottie_url=gift_in.lottie_url
+
     )
     db.add(db_gift)
     await db.commit()

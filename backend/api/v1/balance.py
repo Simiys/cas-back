@@ -35,7 +35,6 @@ class WalletConnectRequest(BaseModel):
 
 class TonDepositRequest(BaseModel):
     amount: float 
-    tx_hash: str 
 
 # ------------------------
 # /balance/convert
