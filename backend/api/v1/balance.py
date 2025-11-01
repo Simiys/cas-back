@@ -165,10 +165,7 @@ async def ton_deposit(
     
 }
 
-    return {
-        "transaction_id": tx.id,
-        "ton_tx": ton_tx
-    }
+    return ton_tx
 
 
 
