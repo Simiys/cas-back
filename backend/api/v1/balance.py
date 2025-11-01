@@ -14,7 +14,7 @@ from shared_models.db import get_session
 from services.balance_service import ExchangeRequest, ExchangeResponse, convert_currency_for_user
 from shared_models.schemas.transactions import TransactionCreate, TransactionRead
 from os import getenv
-
+from config import settings
 
 
 APP_WALLET = getenv("APP_WALLET")
@@ -158,7 +158,7 @@ async def ton_deposit(
     "validUntil": int(time.time()) + 600,  # 10 минут
     "messages": [
         {
-            "address": APP_WALLET,
+            "address": settings.APP_WALLET_ADDRESS,
             "amount": str(int(payload.amount * 1e9)), # TON -> nanoton
         }
     ],
