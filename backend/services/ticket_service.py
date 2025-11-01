@@ -169,4 +169,4 @@ async def generate_wins(db: AsyncSession, user_id: int, ticket_type: str) -> Lis
                 "value_ton": chosen.cost_ton,
                 "gift_id": chosen.id
             })
-        return wins
+    return wins
