@@ -12,7 +12,7 @@ from tonutils.wallet.messages import TransferNFTMessage
 
 load_dotenv()
 
-IS_TESTNET = os.getenv("IS_TESTNET", "True") == "True"
+IS_TESTNET = False
 MNEMONIC = os.getenv("TON_MNEMONIC", "")
 APP_WALLET_ADDRESS = os.getenv("APP_WALLET_ADDRESS", "")
 TONCENTER_API_KEY = os.getenv("TONCENTER_API_KEY", "")
