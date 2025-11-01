@@ -28,6 +28,7 @@ class User(Base):
     games = relationship("MinesGame", back_populates="user")
     lottery_tickets = relationship("LotteryTicket", back_populates="user")
     transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
+    gifts = relationship("Gift", back_populates="user")
 
 
 # ------------------------------
