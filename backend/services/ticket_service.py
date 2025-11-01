@@ -22,6 +22,8 @@ TICKET_WIN_COUNTS = {
     "gold": 4,
 }
 
+WIN_CHANCE = 0.5    
+
 TON_TO_HRPN = 1000  # курс TON → HRPN
 
 # Вероятности типов призов
@@ -133,14 +135,18 @@ async def generate_wins(db: AsyncSession, user_id: int, ticket_type: str) -> Lis
 
     wins = []
     for value in parts:
-        # 🎲 Определяем тип приза по весам
+    # решаем, будет ли эта часть выигрышем
+        if random.random() > WIN_CHANCE:
+            continue  # пропускаем, значит игрок ничего не получает
+
+    # 🎲 Определяем тип приза по весам
         prize_type = random.choices(
             population=list(PRIZE_TYPE_WEIGHTS.keys()),
             weights=list(PRIZE_TYPE_WEIGHTS.values()),
             k=1
         )[0]
 
-        # 🎯 Рассчитываем множитель (0.1 – 5.0)
+    # 🎯 Рассчитываем множитель (0.1 – 5.0)
         multiplier = random.uniform(0.1, 5.0)
         prize_value_hrpn = min(value * multiplier, ticket_price_hrpn * 5)
         prize_value_ton = prize_value_hrpn / TON_TO_HRPN
@@ -152,11 +158,9 @@ async def generate_wins(db: AsyncSession, user_id: int, ticket_type: str) -> Lis
                 "value_ton": prize_value_ton if prize_type == "ton" else None,
                 "gift_id": None
             })
-
         else:  # 🎁 подарок
             if not gifts:
                 continue
-            # Находим подарок, который не дороже рассчитанного значения
             suitable = [g for g in gifts if g.cost_ton * TON_TO_HRPN <= prize_value_hrpn]
             chosen = random.choice(suitable or gifts)
             wins.append({
@@ -165,5 +169,4 @@ async def generate_wins(db: AsyncSession, user_id: int, ticket_type: str) -> Lis
                 "value_ton": chosen.cost_ton,
                 "gift_id": chosen.id
             })
-
-    return wins
+        return wins
