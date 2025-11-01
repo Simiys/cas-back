@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     REDIS_URL: str | None = None
     TOKEN_EXPIRE_MINUTES: int = 60*24*7  # 7 дней по умолчанию
 
+
+    APP_WALLET_ADDRESS: str
+    MNEMONIC: str
+    TONCENTER_API_KEY: str
+
     class Config:
         env_file = os.path.join(BASE_DIR, ".env")
         env_file_encoding = "utf-8"

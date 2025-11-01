@@ -3,19 +3,19 @@ from datetime import datetime, timedelta
 import os
 from typing import Dict, Optional
 import aiohttp
-from dotenv import load_dotenv
 import requests
 from tonutils.client import ToncenterV3Client
 from tonutils.wallet import WalletV4R2
 from tonutils.wallet.messages import TransferNFTMessage
+from config import settings
 
 
-load_dotenv()
+
 
 IS_TESTNET = False
-MNEMONIC = os.getenv("TON_MNEMONIC", "")
-APP_WALLET_ADDRESS = os.getenv("APP_WALLET_ADDRESS", "")
-TONCENTER_API_KEY = os.getenv("TONCENTER_API_KEY", "")
+MNEMONIC = settings.MNEMONIC
+APP_WALLET_ADDRESS = settings.APP_WALLET_ADDRESS
+TONCENTER_API_KEY = settings.TONCENTER_API_KEY
 
 
 # --------------------------

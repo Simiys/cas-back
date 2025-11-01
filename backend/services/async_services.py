@@ -6,11 +6,11 @@ from shared_models.crud.user import get_user_by_id, update_user_balance
 from shared_models.crud.wallet import get_wallet_by_user_id
 from shared_models.schemas.transactions import TransactionUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
-from dotenv import load_dotenv
+from config import settings
 
-load_dotenv()
 
-APP_WALLET_ADDRESS = os.getenv("APP_WALLET_ADDRESS", "")
+APP_WALLET_ADDRESS = settings.APP_WALLET_ADDRESS
+
 
 
 async def process_gift_withdrawal(
