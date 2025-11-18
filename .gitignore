@@ -36,7 +36,8 @@ docker-compose.override.yml
 docker-compose.override.yml
 **/Dockerfile.*.swp
 **/.dockerignore.swp
-
+.dockerignore
+Dockerfile
 # --------------------
 # IDE / Editor
 # --------------------
