@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     REDIS_URL: str | None = None
     TOKEN_EXPIRE_MINUTES: int = 60*24*7  # 7 дней по умолчанию
+    TELEGRAM_BOT_TOKEN: str | None = None
 
 
     APP_WALLET_ADDRESS: str

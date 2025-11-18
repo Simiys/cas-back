@@ -50,7 +50,7 @@ async def get_user_from_telegram_auth(auth_token: str = Header(...)) -> dict:
     check_hash = data.pop("hash", None)
     auth_data = "\n".join(f"{k}={v}" for k, v in sorted(data.items()))
 
-    secret_key = hmac.new(b"WebAppData", settings.SECRET_KEY.encode(), hashlib.sha256).digest()
+    secret_key = hmac.new(b"WebAppData", settings.TELEGRAM_BOT_TOKEN.encode(), hashlib.sha256).digest()
     computed_hash = hmac.new(secret_key, auth_data.encode(), hashlib.sha256).hexdigest()
 
     if computed_hash != check_hash:
