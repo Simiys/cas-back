@@ -64,37 +64,38 @@ async def process_ton_withdraw(
         )
 
 
+from datetime import datetime, timedelta, timezone
+
 async def process_pending_deposits(db: AsyncSession):
     """
     Проверяет все pending депозиты:
-    - Если транзакция найдена и успешна → ставим completed и начисляем TON пользователю
-    - Если транзакция в pending > 1 часа → ставим rejected
+    - Если транзакция висит > 1 часа → rejected
+    - Если транзакция найдена → completed + начисление
     """
-    now = datetime.utcnow()
-    one_hour_ago = now - timedelta(hours=1)
 
-    # Получаем все pending депозиты
+    now = datetime.now(timezone.utc)           # <-- UTC-aware
+    one_hour_ago = now - timedelta(hours=1)    # <-- тоже UTC-aware
+
     pending_transactions = await get_pending_deposit_transactions(db)
 
-    # Берём последние входящие транзакции кошелька
     recent_txs = get_last_transactions(limit=30)
 
     for tx in pending_transactions:
-        # 1) если висит больше часа → rejected
-        if tx.created_at < one_hour_ago:
+
+        # 1) Если висит > часа → rejected
+        if tx.created_at < one_hour_ago:       # <-- теперь корректно сравнимо
             await update_transaction(db, tx.id, TransactionUpdate(status="rejected"))
             continue
 
-        # 2) Проверяем, есть ли транзакция
         user = await get_user_by_id(db, tx.user_id)
         wallet = await get_wallet_by_user_id(user.id)
 
-        expected_amount_ngr = int(tx.amount * 1e9)  # TON → нанотонны
+        expected_amount_ngr = int(tx.amount * 1e9)
 
         matched_tx = None
         for chain_tx in recent_txs:
             if (
-                chain_tx["sender"] == wallet.wallet_address 
+                chain_tx["sender"] == wallet.wallet_address
                 and chain_tx["receiver"] == APP_WALLET_ADDRESS
                 and chain_tx["amount"] == expected_amount_ngr
                 and chain_tx["confirmed"] is True
@@ -103,10 +104,9 @@ async def process_pending_deposits(db: AsyncSession):
                 break
 
         if not matched_tx:
-            continue  # транзакции ещё нет → ждём
+            continue
 
-        # 3) транзакция найдена — завершить и начислить TON
+        # 3) Транзакция найдена — completed + баланс
         await update_transaction(db, tx.id, TransactionUpdate(status="completed"))
-
         new_balance = user.ton_balance + tx.amount
         await update_user_balance(db, user.id, ton_balance=new_balance)
