@@ -174,9 +174,9 @@ async def get_transaction_info(tx_hash: str) -> Optional[Dict]:
     }
 
 
-def get_last_transactions(limit: int = 10):
+async def get_last_transactions(limit: int = 10):
     """
-    Получение последних транзакций кошелька за последние 20 минут через TonCenter v3 API.
+    Получение последних транзакций кошелька за последние 20 минут через TonCenter v3 API (async).
     Возвращает список словарей:
     {
         'sender': str,
@@ -187,15 +187,17 @@ def get_last_transactions(limit: int = 10):
         'confirmed': bool
     }
     """
+
     twenty_minutes_ago = int((datetime.utcnow() - timedelta(minutes=20)).timestamp())
 
-    url = f"https://toncenter.com/api/v3/transactions"
+    url = "https://toncenter.com/api/v3/transactions"
+
     params = {
         "account": APP_WALLET_ADDRESS,
         "limit": limit,
         "offset": 0,
         "sort": "desc",
-        "start_lt": twenty_minutes_ago,  # запрашиваем транзакции с lt > этого значения
+        "start_lt": twenty_minutes_ago,
     }
 
     headers = {
@@ -203,9 +205,10 @@ def get_last_transactions(limit: int = 10):
         "X-API-Key": TONCENTER_API_KEY
     }
 
-    response = requests.get(url, params=params, headers=headers)
-    response.raise_for_status()
-    data = response.json()
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params, headers=headers) as response:
+            response.raise_for_status()
+            data = await response.json()
 
     transactions = []
 
@@ -217,8 +220,10 @@ def get_last_transactions(limit: int = 10):
         sender = in_msg.get("source")
         receiver = in_msg.get("destination")
         hash_ = tx.get("hash")
+
         raw_amount = in_msg.get("value")
         amount = int(raw_amount or 3)
+
         time = datetime.fromtimestamp(tx.get("now", 0))
         confirmed = tx.get("end_status") == "active"
 

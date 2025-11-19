@@ -72,24 +72,28 @@ async def process_pending_deposits(db: AsyncSession):
     - Если транзакция висит > 1 часа → rejected
     - Если транзакция найдена → completed + начисление
     """
-
+    print("process_pending_deposits 75")
     now = datetime.now(timezone.utc)           # <-- UTC-aware
     one_hour_ago = now - timedelta(hours=1)    # <-- тоже UTC-aware
 
     pending_transactions = await get_pending_deposit_transactions(db)
 
-    recent_txs = get_last_transactions(limit=30)
-
+    
+    print("/n/n",  pending_transactions, "/n/n")
+    recent_txs = await get_last_transactions(limit=30)
+    print(recent_txs, "/n/n")
     for tx in pending_transactions:
 
         # 1) Если висит > часа → rejected
-        if tx.created_at < one_hour_ago:       # <-- теперь корректно сравнимо
+        if tx.created_at < one_hour_ago:
+            print("tx rejected: " + tx)       # <-- теперь корректно сравнимо
             await update_transaction(db, tx.id, TransactionUpdate(status="rejected"))
             continue
 
         user = await get_user_by_id(db, tx.user_id)
-        wallet = await get_wallet_by_user_id(user.id)
-
+        print("user: ", user)
+        wallet = await get_wallet_by_user_id(db, user.id)
+        print("wallet: ", wallet)
         expected_amount_ngr = int(tx.amount * 1e9)
 
         matched_tx = None
