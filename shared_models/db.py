@@ -30,6 +30,8 @@ async def create_engine_with_retry(retries=10, delay=3):
                 DATABASE_URL,
                 echo=False,
                 future=True,
+                pool_pre_ping=True,    # <--- ПРОВЕРКА ЖИВОСТИ перед использованием
+                pool_recycle=120, 
             )
 
             # Тестовое подключение
