@@ -219,7 +219,8 @@ def get_last_transactions(limit: int = 10):
         sender = in_msg.get("source")
         receiver = in_msg.get("destination")
         hash_ = tx.get("hash")
-        amount = int(in_msg.get("value", 0))
+        raw_amount = in_msg.get("value")
+        amount = int(raw_amount or 3)
         time = datetime.fromtimestamp(tx.get("now", 0))
         confirmed = tx.get("end_status") == "active"
 
