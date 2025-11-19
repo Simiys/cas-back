@@ -10,6 +10,7 @@ from backend.services.wallet_service import get_all_gifts
 from shared_models.db import get_context_manager
 from shared_models.schemas.gift import GiftCreate
 from shared_models.crud.gift import create_gift
+from datetime import datetime
 
 load_dotenv()
 APP_WALLET_ADDRESS = os.getenv("APP_WALLET_ADDRESS", "")
@@ -64,7 +65,8 @@ def start_scheduler():
         fetch_and_store_gifts_job,
         trigger=IntervalTrigger(minutes=10),
         id="fetch_and_store_gifts",
-        replace_existing=True
+        replace_existing=True,
+        next_run_time=datetime.now()
     )
 
     scheduler.start()
