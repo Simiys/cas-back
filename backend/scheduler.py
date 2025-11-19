@@ -28,7 +28,7 @@ def start_scheduler():
 
     scheduler.add_job(
         process_deposits_job,
-        trigger=IntervalTrigger(minutes=10),
+        trigger=IntervalTrigger(minutes=2),
         id="process_pending_deposits",
         replace_existing=True
     )
@@ -62,7 +62,7 @@ def start_scheduler():
 
     scheduler.add_job(
         fetch_and_store_gifts_job,
-        trigger=IntervalTrigger(hours=1),
+        trigger=IntervalTrigger(minutes=10),
         id="fetch_and_store_gifts",
         replace_existing=True
     )

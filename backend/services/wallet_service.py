@@ -27,8 +27,6 @@ def get_gift_price(nft_address: str, limit=10, min_value_threshold=2.0):
         f"https://toncenter.com/api/v2/getTransactions"
         f"?address={nft_address}"
         f"&limit={limit}"
-        f"&to_lt=0"
-        f"&archival=false"
         f"&api_key={TONCENTER_API_KEY}"
     )
     resp = requests.get(url)
