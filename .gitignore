@@ -60,3 +60,4 @@ desktop.ini
 # --------------------
 shared_models/__pycache__/
 shared_models/*.pyc
+shared_models/requirements.txt

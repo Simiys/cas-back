@@ -1,0 +1,22 @@
+[project]
+name = "shared_models"
+version = "0.1.0"
+description = "Shared database models, schemas and CRUD for the app"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "sqlalchemy>=2.0",
+    "asyncpg",
+    "pydantic>=2.0",
+    "alembic",
+    "python-dotenv",
+    "pydantic-settings",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
