@@ -95,29 +95,23 @@ async def ton_withdraw(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_session),
 ):
-    # Получаем user_id
     user_id = await get_current_user_id(authorization)
 
-    # Получаем пользователя
     user = await get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Проверяем баланс
     if user.ton_balance < payload.amount:
         raise HTTPException(status_code=400, detail="Not enough TON balance")
 
-    # Снимаем TON сразу (чтобы избежать гонок)
     user.ton_balance -= payload.amount
     await db.commit()
     await db.refresh(user)
 
-    # Получаем кошелек пользователя
     wallet = await get_wallet_by_user_id(db, user_id)
     if not wallet:
         raise HTTPException(status_code=400, detail="Wallet not found")
 
-    # Создаем транзакцию
     tx = TransactionCreate(
         user_id=user_id,
         type="ton_withdrawal",
@@ -126,10 +120,9 @@ async def ton_withdraw(
     )
     transaction = await create_transaction(db, tx)
 
-    # Запускаем фоновую задачу на отправку TON
-    asyncio.create_task(
-        process_ton_withdraw(db, transaction.id, payload.amount, wallet.wallet_address)
-    )
+
+    await process_ton_withdraw(db, transaction.id, payload.amount, wallet.wallet_address)
+
 
     return {"message": "TON withdrawal started", "transaction_id": transaction.id}
 
@@ -182,5 +175,5 @@ async def ton_wallet_connect(
         return {"message": "Wallet already exists" }
 
     # Создаем новый кошелек
-    wallet = await create_wallet(db, user_id=user_id, wallet_address=payload.wallet_address)
+    wallet = await create_wallet(db, user_id=user_id, wallet_address=payload.wallet_address.upper())
     return {"message": "Wallet connected", "wallet_address": wallet.wallet_address}

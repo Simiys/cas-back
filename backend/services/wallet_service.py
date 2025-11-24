@@ -129,7 +129,7 @@ async def send_ton(destination_address: str, amount: float, comment: str = ""):
     tx = await wallet.transfer(
         destination=destination_address,
         amount=amount,
-        body="From stars shop"
+        body="Ton Withdraw"
     )
 
 
