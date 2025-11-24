@@ -19,11 +19,8 @@ scheduler = AsyncIOScheduler()
 
 
 def start_scheduler():
-
-    # -----------------------
-    # 1) ПЕРВАЯ async задача
-    # -----------------------
     async def process_deposits_job():
+        print("process_deposits_job executed")  # <-- для отладки
         async with get_context_manager() as db:
             await process_pending_deposits(db)
 
@@ -34,20 +31,16 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # -----------------------
-    # 2) Вторая async задача
-    # -----------------------
     async def fetch_and_store_gifts_job():
+        print("fetch_and_store_gifts_job executed")  # <-- для отладки
         async with get_context_manager() as db:
             try:
                 gifts = get_all_gifts(APP_WALLET_ADDRESS)
-
                 for gift in gifts:
                     exists = await db.execute(
                         "SELECT 1 FROM gifts WHERE address = :addr",
                         {"addr": gift["address"]}
                     )
-
                     if not exists.scalar():
                         gift_in = GiftCreate(
                             name=gift["name"],
@@ -57,9 +50,8 @@ def start_scheduler():
                             lottie_url=gift["lottie"],
                         )
                         await create_gift(db, gift_in)
-
             except Exception as e:
-                print(f"[Scheduler] Error fetching/storing gifts: {e}")
+                print(f"[Scheduler] Error: {e}")
 
     scheduler.add_job(
         fetch_and_store_gifts_job,
@@ -70,3 +62,4 @@ def start_scheduler():
     )
 
     scheduler.start()
+    print("Scheduler started")
