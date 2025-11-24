@@ -56,7 +56,7 @@ async def process_ton_withdraw(
             TransactionUpdate(status="completed", tx_hash=tx_hash)
         )
     except Exception as e:
-        # При ошибке отмечаем транзакцию как rejected
+        print("withdraw_err", e)
         await update_transaction(
             db,
             tx_id,
@@ -91,11 +91,11 @@ async def process_pending_deposits(db: AsyncSession):
         user = await get_user_by_id(db, tx.user_id)
         wallet = await get_wallet_by_user_id(db, user.id)
         expected_amount_ngr = int(tx.amount * 1e9)
-        print("chain_tx: ", chain_tx)
         print("tx sender: ", tx.tx_hash)
         print("tx amount: ", tx.amount)
         matched_tx = None
         for chain_tx in recent_txs:
+            print("chain_tx: ", chain_tx)
             if (
                 chain_tx["sender"] == wallet.wallet_address
                 and chain_tx["receiver"] == APP_WALLET_ADDRESS
