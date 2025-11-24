@@ -11,14 +11,14 @@ from shared_models.db import get_context_manager
 from shared_models.schemas.gift import GiftCreate
 from shared_models.crud.gift import create_gift
 from datetime import datetime
+from config import Settings
 
-load_dotenv()
-APP_WALLET_ADDRESS = os.getenv("APP_WALLET_ADDRESS", "")
+APP_WALLET_ADDRESS = Settings.APP_WALLET_ADDRESS
 
 scheduler = AsyncIOScheduler()
 
 
-async def start_scheduler():
+def start_scheduler():
     async def process_deposits_job():
         print("process_deposits_job executed")  # <-- для отладки
         async with get_context_manager() as db:
@@ -32,7 +32,6 @@ async def start_scheduler():
     )
 
     async def fetch_and_store_gifts_job():
-        print("fetch_and_store_gifts_job executed")  # <-- для отладки
         async with get_context_manager() as db:
             try:
                 gifts = get_all_gifts(APP_WALLET_ADDRESS)
