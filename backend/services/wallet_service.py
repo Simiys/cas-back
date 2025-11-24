@@ -4,8 +4,8 @@ import os
 from typing import Dict, Optional
 import aiohttp
 import requests
-from tonutils.client import ToncenterV3Client
-from tonutils.wallet import WalletV4R2
+from tonutils.client import ToncenterV2Client
+from tonutils.wallet import WalletV5R1
 from tonutils.wallet.messages import TransferNFTMessage
 from config import settings
 
@@ -124,9 +124,9 @@ async def send_nft(destination_address: str, nft_address: str, comment: str = ""
 async def send_ton(destination_address: str, amount: float, comment: str = ""):
     print("sending...")
 
-    client = ToncenterV3Client(api_key=TONCENTER_API_KEY)
+    client = ToncenterV2Client(api_key=TONCENTER_API_KEY)
 
-    wallet, public_key, private_key, mnemonic = WalletV4R2.from_mnemonic(client=client, mnemonic=_mnemonics())
+    wallet, public_key, private_key, mnemonic = WalletV5R1.from_mnemonic(client=client, mnemonic=_mnemonics())
     print(MNEMONIC)
     print(_mnemonics())
     print("dest: ", destination_address)
