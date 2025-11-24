@@ -127,7 +127,8 @@ async def send_ton(destination_address: str, amount: float, comment: str = ""):
     client = ToncenterV3Client(api_key=TONCENTER_API_KEY)
 
     wallet, public_key, private_key, mnemonic = WalletV4R2.from_mnemonic(client=client, mnemonic=_mnemonics())
-    print(mnemonic)
+    print(MNEMONIC)
+    print(_mnemonics())
     print("dest: ", destination_address)
     print("am: ", amount)
     tx = await wallet.transfer(
