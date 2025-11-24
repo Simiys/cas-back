@@ -91,7 +91,8 @@ def get_all_gifts(owner_address: str, limit: int = 50, offset: int = 0):
             "desc": description,
             "image": image,   
             "lottie": lottie, 
-            "price": get_gift_price(token_addr)
+            "price": get_gift_price(token_addr),
+            "address":token_addr
         })
     return results
 
