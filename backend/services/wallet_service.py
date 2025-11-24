@@ -123,13 +123,13 @@ async def send_nft(destination_address: str, nft_address: str, comment: str = ""
 # --------------------------
 async def send_ton(destination_address: str, amount: float, comment: str = ""):
     print("sending...")
-    print(mnemonic)
-    print("dest: ", destination_address)
-    print("am: ", amount)
+
     client = ToncenterV3Client(api_key=TONCENTER_API_KEY)
 
     wallet, public_key, private_key, mnemonic = WalletV4R2.from_mnemonic(client=client, mnemonic=_mnemonics())
-    
+    print(mnemonic)
+    print("dest: ", destination_address)
+    print("am: ", amount)
     tx = await wallet.transfer(
         destination=destination_address,
         amount=amount,
