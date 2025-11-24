@@ -7,10 +7,22 @@ from shared_models.crud.wallet import get_wallet_by_user_id
 from shared_models.schemas.transactions import TransactionUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
 from config import settings
-
+import base64
+import binascii
 
 APP_WALLET_ADDRESS = settings.APP_WALLET_ADDRESS
 
+
+#utils
+def ton_to_raw(addr: str) -> str:
+    # base64url decode
+    data = base64.urlsafe_b64decode(addr + "==")
+
+    flags = data[0]
+    workchain = data[1]
+    hash_part = data[2:-2]          # remove CRC16 (last 2 bytes)
+
+    return f"{workchain}:{hash_part.hex().upper()}"
 
 
 async def process_gift_withdrawal(
@@ -44,11 +56,8 @@ async def process_ton_withdraw(
     amount: float,
     dest_address: str
 ):
-    """
-    Фоновая обработка вывода TON.
-    Обновляет статус транзакции после завершения.
-    """
     try:
+        print("started withdraw for tx: ", tx_id)
         tx_hash = await send_ton(dest_address, amount)
         await update_transaction(
             db,
@@ -78,9 +87,7 @@ async def process_pending_deposits(db: AsyncSession):
     pending_transactions = await get_pending_deposit_transactions(db)
 
     
-    print("/n/n",  pending_transactions, "/n/n")
     recent_txs = await get_last_transactions(limit=30)
-    print(recent_txs, "/n/n")
     for tx in pending_transactions:
         print("processing tx: ", tx.id) 
         # 1) Если висит > часа → rejected
@@ -92,18 +99,19 @@ async def process_pending_deposits(db: AsyncSession):
         wallet = await get_wallet_by_user_id(db, user.id)
         expected_amount_ngr = int(tx.amount * 1e9)
         print("tx sender: ", tx.tx_hash)
-        print("tx amount: ", tx.amount)
+        print("tx amount: ", expected_amount_ngr)
         matched_tx = None
         for chain_tx in recent_txs:
             print("chain_tx: ", chain_tx)
             if (
                 chain_tx["sender"] == wallet.wallet_address
-                and chain_tx["receiver"] == APP_WALLET_ADDRESS
+                and chain_tx["receiver"] == ton_to_raw(APP_WALLET_ADDRESS)
                 and chain_tx["amount"] == expected_amount_ngr
                 and chain_tx["confirmed"] is True
             ):
-                print()
                 matched_tx = chain_tx
+                print("Matched!")
+                print(matched_tx)
                 break
 
         if not matched_tx:
