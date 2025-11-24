@@ -86,7 +86,6 @@ async def process_pending_deposits(db: AsyncSession):
 
         # 1) Если висит > часа → rejected
         if tx.created_at < one_hour_ago:
-            print("tx rejected: " + tx)       # <-- теперь корректно сравнимо
             await update_transaction(db, tx.id, TransactionUpdate(status="rejected"))
             continue
 

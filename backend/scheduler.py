@@ -39,7 +39,7 @@ def start_scheduler():
                 for gift in gifts:
                     exists = await get_gift_by_address(db, gift["address"]) 
                     
-                    if not exists.scalar():
+                    if not exists:
                         gift_in = GiftCreate(
                             name=gift["name"],
                             address=gift["address"],
