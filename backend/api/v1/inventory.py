@@ -58,9 +58,11 @@ async def get_inventory(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_session),
 ):
+    print("/inventory")
     user_id = await get_current_user_id(authorization)
-
+    print("id: ", user_id)
     inventory = await get_gifts_by_user_id(db, user_id)
+    print("inv: ", inventory)
     return inventory
 
 

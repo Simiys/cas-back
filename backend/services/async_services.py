@@ -74,7 +74,7 @@ async def process_pending_deposits(db: AsyncSession):
     """
     print("process_pending_deposits 75")
     now = datetime.now(timezone.utc)           # <-- UTC-aware
-    one_hour_ago = now - timedelta(hours=1)    # <-- тоже UTC-aware
+    one_hour_ago = now - timedelta(hours=3)    # <-- тоже UTC-aware
 
     pending_transactions = await get_pending_deposit_transactions(db)
 
