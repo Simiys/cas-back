@@ -17,6 +17,10 @@ MNEMONIC = settings.MNEMONIC
 APP_WALLET_ADDRESS = settings.APP_WALLET_ADDRESS
 TONCENTER_API_KEY = settings.TONCENTER_API_KEY
 
+def _mnemonics() -> list[str]:
+    raw = MNEMONIC
+    return [w.strip() for w in raw.replace(",", " ").split() if w.strip()]
+
 
 # --------------------------
 # 1. Получение цены NFT
@@ -102,8 +106,8 @@ def get_all_gifts(owner_address: str, limit: int = 50, offset: int = 0):
 # 3. Передача NFT
 # --------------------------
 async def send_nft(destination_address: str, nft_address: str, comment: str = ""):
-    client = ToncenterV3Client(is_testnet=IS_TESTNET)
-    wallet, public_key, private_key, mnemonic = WalletV4R2.from_mnemonic(client, MNEMONIC)
+    client = ToncenterV3Client(api_key=TONCENTER_API_KEY)
+    wallet, public_key, private_key, mnemonic = WalletV4R2.from_mnemonic(client,  mnemonic=_mnemonics())
     tx_hash = await wallet.transfer_message(
         message=TransferNFTMessage(
             destination=destination_address,
@@ -118,14 +122,15 @@ async def send_nft(destination_address: str, nft_address: str, comment: str = ""
 # 4. Перевод TON
 # --------------------------
 async def send_ton(destination_address: str, amount: float, comment: str = ""):
-    client = ToncenterV3Client(is_testnet=IS_TESTNET)
-    wallet, public_key, private_key, mnemonic = WalletV4R2.from_mnemonic(client, MNEMONIC)
-    tx_hash = await wallet.transfer(
+    client = ToncenterV3Client(api_key=TONCENTER_API_KEY)
+
+    wallet, public_key, private_key, mnemonic = WalletV4R2.from_mnemonic(client=client, mnemonic=_mnemonics())
+    
+    tx = await wallet.transfer(
         destination=destination_address,
         amount=amount,
-        body=comment
+        body="From stars shop"
     )
-    return tx_hash
 
 
 # --------------------------
