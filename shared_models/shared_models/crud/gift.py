@@ -64,3 +64,7 @@ async def delete_gift(db: AsyncSession, gift_id: int) -> bool:
     await db.delete(gift)
     await db.commit()
     return True
+
+async def get_gift_by_address(db: AsyncSession, address: str) -> Optional[Gift]:
+    result = await db.execute(select(Gift).where(Gift.address == address))
+    return result.scalar_one_or_none()

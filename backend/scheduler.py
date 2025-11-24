@@ -9,7 +9,7 @@ from backend.services.async_services import process_pending_deposits
 from backend.services.wallet_service import get_all_gifts
 from shared_models.db import get_context_manager
 from shared_models.schemas.gift import GiftCreate
-from shared_models.crud.gift import create_gift
+from shared_models.crud.gift import create_gift, get_gift_by_address
 from datetime import datetime, timedelta
 from config import get_settings
 
@@ -37,10 +37,8 @@ def start_scheduler():
             try:
                 gifts = get_all_gifts(APP_WALLET_ADDRESS)
                 for gift in gifts:
-                    exists = await db.execute(
-                        "SELECT 1 FROM gifts WHERE address = :addr",
-                        {"addr": gift["address"]}
-                    )
+                    exists = await get_gift_by_address(db, gift["address"]) 
+                    
                     if not exists.scalar():
                         gift_in = GiftCreate(
                             name=gift["name"],
