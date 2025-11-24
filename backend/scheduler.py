@@ -11,9 +11,9 @@ from shared_models.db import get_context_manager
 from shared_models.schemas.gift import GiftCreate
 from shared_models.crud.gift import create_gift
 from datetime import datetime
-from config import Settings
+from config import get_settings
 
-APP_WALLET_ADDRESS = Settings.APP_WALLET_ADDRESS
+APP_WALLET_ADDRESS = get_settings().APP_WALLET_ADDRESS
 
 scheduler = AsyncIOScheduler()
 
