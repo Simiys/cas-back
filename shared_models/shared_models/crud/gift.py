@@ -12,7 +12,7 @@ async def create_gift(db: AsyncSession, gift_in: GiftCreate) -> Gift:
         name=gift_in.name,
         address=gift_in.address,
         cost_ton=gift_in.cost_ton, 
-        immage_url=gift_in.image_url,
+        image_url=gift_in.image_url,
         lottie_url=gift_in.lottie_url
 
     )
