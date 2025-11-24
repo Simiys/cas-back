@@ -47,7 +47,7 @@ async def startup_event():
         print("Redis connected")
 
     # запускаем APScheduler
-    start_scheduler()
+    await start_scheduler()
     print("✅ Scheduler started")
 
     

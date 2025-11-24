@@ -18,7 +18,7 @@ APP_WALLET_ADDRESS = os.getenv("APP_WALLET_ADDRESS", "")
 scheduler = AsyncIOScheduler()
 
 
-def start_scheduler():
+async def start_scheduler():
     async def process_deposits_job():
         print("process_deposits_job executed")  # <-- для отладки
         async with get_context_manager() as db:
