@@ -10,7 +10,7 @@ from backend.services.wallet_service import get_all_gifts
 from shared_models.db import get_context_manager
 from shared_models.schemas.gift import GiftCreate
 from shared_models.crud.gift import create_gift
-from datetime import datetime
+from datetime import datetime, timedelta
 from config import get_settings
 
 APP_WALLET_ADDRESS = get_settings().APP_WALLET_ADDRESS
@@ -28,7 +28,8 @@ def start_scheduler():
         process_deposits_job,
         trigger=IntervalTrigger(minutes=2),
         id="process_pending_deposits",
-        replace_existing=True
+        replace_existing=True,
+        next_run_time=datetime.now() + timedelta(minutes=1)
     )
 
     async def fetch_and_store_gifts_job():
@@ -57,7 +58,7 @@ def start_scheduler():
         trigger=IntervalTrigger(minutes=10),
         id="fetch_and_store_gifts",
         replace_existing=True,
-        next_run_time=datetime.now()
+        next_run_time=datetime.now() + timedelta(minutes=2)
     )
 
     scheduler.start()
