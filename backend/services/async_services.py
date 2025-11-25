@@ -65,7 +65,6 @@ async def process_ton_withdraw(
             TransactionUpdate(status="completed", tx_hash=tx_hash)
         )
     except Exception as e:
-        print("withdraw_err", e)
         await update_transaction(
             db,
             tx_id,
@@ -89,7 +88,6 @@ async def process_pending_deposits(db: AsyncSession):
     
     recent_txs = await get_last_transactions(limit=30)
     for tx in pending_transactions:
-        print("processing tx: ", tx.id) 
         # 1) Если висит > часа → rejected
         if tx.created_at < one_hour_ago:
             await update_transaction(db, tx.id, TransactionUpdate(status="rejected"))
@@ -98,11 +96,8 @@ async def process_pending_deposits(db: AsyncSession):
         user = await get_user_by_id(db, tx.user_id)
         wallet = await get_wallet_by_user_id(db, user.id)
         expected_amount_ngr = int(tx.amount * 1e9)
-        print("tx sender: ", tx.tx_hash)
-        print("tx amount: ", expected_amount_ngr)
         matched_tx = None
         for chain_tx in recent_txs:
-            print("chain_tx: ", chain_tx)
             if (
                 chain_tx["sender"] == wallet.wallet_address
                 and chain_tx["receiver"] == ton_to_raw(APP_WALLET_ADDRESS)
@@ -110,8 +105,6 @@ async def process_pending_deposits(db: AsyncSession):
                 and chain_tx["confirmed"] is True
             ):
                 matched_tx = chain_tx
-                print("Matched!")
-                print(matched_tx)
                 break
 
         if not matched_tx:

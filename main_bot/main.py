@@ -101,13 +101,11 @@ async def cmd_start(message: types.Message):
                 f"⚪ Баланс: {user_data.ton_balance} TON"
             )
         except Exception as e:
-            print(f"Ошибка регистрации: {e}")
             await message.answer("⚠️ Пользователь уже существует или произошла ошибка.")
 
 
 # ---------- Точка входа ----------
 async def main():
-    print("Bot started...")
     await create_engine_with_retry()
     await init_db()      
     await dp.start_polling(bot)
