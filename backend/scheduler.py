@@ -20,7 +20,6 @@ scheduler = AsyncIOScheduler()
 
 def start_scheduler():
     async def process_deposits_job():
-        print("process_deposits_job executed")  # <-- для отладки
         async with get_context_manager() as db:
             await process_pending_deposits(db)
 
@@ -60,4 +59,3 @@ def start_scheduler():
     )
 
     scheduler.start()
-    print("Scheduler started")

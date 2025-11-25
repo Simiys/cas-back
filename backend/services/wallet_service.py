@@ -106,8 +106,8 @@ def get_all_gifts(owner_address: str, limit: int = 50, offset: int = 0):
 # 3. Передача NFT
 # --------------------------
 async def send_nft(destination_address: str, nft_address: str, comment: str = ""):
-    client = ToncenterV3Client(api_key=TONCENTER_API_KEY)
-    wallet, public_key, private_key, mnemonic = WalletV4R2.from_mnemonic(client,  mnemonic=_mnemonics())
+    client = ToncenterV2Client(api_key=TONCENTER_API_KEY)
+    wallet, public_key, private_key, mnemonic = WalletV5R1.from_mnemonic(client,  mnemonic=_mnemonics())
     tx_hash = await wallet.transfer_message(
         message=TransferNFTMessage(
             destination=destination_address,
